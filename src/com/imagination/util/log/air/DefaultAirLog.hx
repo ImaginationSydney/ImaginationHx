@@ -1,4 +1,5 @@
 package com.imagination.util.log.air;
+import com.imagination.delay.Delay;
 import com.imagination.util.app.App;
 import com.imagination.util.fs.Files;
 import com.imagination.util.log.Log.LogLevel;
@@ -15,8 +16,11 @@ import flash.system.Capabilities;
 class DefaultAirLog
 {
 	private static var installed:Bool;
+	public static var criticalErrorCodes:Array<Int> = [
+					3691 // Resource limit exceeded
+					];
 	
-	public static function install(root:DisplayObject):Void
+	public static function install(root:DisplayObject, ?restartApp:Void->Void):Void
 	{
 		if (installed) return;
 		installed = true;
@@ -32,7 +36,7 @@ class DefaultAirLog
 		
 		Log.mapHandler(new AirFileLogger(docsDir + "errorLog", false), untyped(LogLevel.UNCAUGHT_ERROR | LogLevel.ERROR));
 		
-		root.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
+		root.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError.bind(_, restartApp));
 		
 		CustomTrace.install();
 	}
@@ -43,7 +47,7 @@ class DefaultAirLog
 		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), untyped(LogLevel.UNCAUGHT_ERROR | LogLevel.ERROR | LogLevel.WARN));
 	}
 	
-	private static function onUncaughtError(e:UncaughtErrorEvent):Void 
+	private static function onUncaughtError(e:UncaughtErrorEvent, ?restartApp:Void->Void):Void 
 	{
 		var message:String;
 		if (Reflect.hasField(e.error, "message"))
@@ -61,10 +65,16 @@ class DefaultAirLog
 		var err:Error = cast(e.error);
 		if (err != null) {
 			Logger.error(e.target, message, err.errorID, err.getStackTrace());
+			
+			if (restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
+				Logger.info(e.target, "Critical error "+err.errorID+" caught, attempting restart");
+				Delay.byFrames(1, restartApp);
+			}
 		}else {
 			Logger.error(e.target, message);
 		}
 		e.preventDefault();
+		
 	}
 	
 }

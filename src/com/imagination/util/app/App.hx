@@ -10,6 +10,10 @@ import openfl.display.Stage;
 #if flash
 import flash.desktop.NativeApplication;
 import flash.events.Event;
+
+#elseif js
+import js.html.Event;
+
 #end
 
 /**
@@ -22,8 +26,11 @@ class App
 	static private var version:String;
 	static private var appFilename:String;
 	
-	static private var exitHandlers:Array<ExitHandler>;
+	static private var exitConfirmers:Array<ExitConfirmer>;
+	static private var exitCleanups:Array<ExitCleanup>;
 	static private var ignoreExit:Bool;
+	static private var callingExit:Bool;
+	static private var isSetup:Bool;
 	
 	public static function getAppId():String 
 	{
@@ -43,67 +50,131 @@ class App
 		return version;
 	}
 	
-	static public function exit() 
+	static private function setup() 
 	{
+		if (isSetup) return;
+		isSetup = true;
+	
+		exitConfirmers = [];
+		exitCleanups = [];
+		
 		#if flash
-		NativeApplication.nativeApplication.exit();
+			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onBeginExit);
+		#elseif js
+			js.Browser.window.addEventListener("beforeunload", onBeginExit);
+			js.Browser.window.addEventListener("unload", onExit);
 		#else
 			// NativeApplication not supported
 		#end
 	}
 	
-	static public function addExitHandler(handler:ExitContinue -> Void) 
+	static public function exit() 
 	{
-		
-		if (exitHandlers == null) {
-			exitHandlers = [];
-			#if flash
-				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onExiting);
-			#else
-				// NativeApplication not supported
-			#end
-		}
-		exitHandlers.push(handler);
-		
+		#if flash
+			NativeApplication.nativeApplication.exit();
+		#else
+			// NativeApplication not supported
+		#end
 	}
 	
-	static public function removeExitHandler(handler:ExitContinue -> Void) 
+	static public function addExitConfirmer(handler:ExitContinue -> Void) 
 	{
-		exitHandlers.remove(handler);
+		
+		if (exitConfirmers == null) {
+			setup();
+		}
+		exitConfirmers.push(handler);
+		
+	}
+	static public function removeExitConfirmer(handler:ExitContinue -> Void) 
+	{
+		exitConfirmers.remove(handler);
+	}
+	
+	
+	static public function addExitCleanup(handler:Void -> Void) 
+	{
+		
+		if (exitCleanups == null) {
+			setup();
+		}
+		exitCleanups.push(handler);
+		
+	}
+	static public function removeExitCleanup(handler:Void -> Void) 
+	{
+		exitCleanups.remove(handler);
 	}
 	
 	#if flash
-	static private function onExiting(e:Event):Void 
+	static private function onBeginExit(e:Event):Void 
 	{
-		if (ignoreExit) return;
-		if (exitHandlers.length > 0) {
-			e.preventDefault();
-			
-			callExitHandler(0);
+		handleExitEvent(e.preventDefault);
+	}
+	#elseif js
+	static private function onBeginExit(e:Event):Bool 
+	{
+		if (!handleExitEvent(e.preventDefault)){
+			var res = js.Browser.window.confirm("You will loose unsaved work"); // This message will be replaced by most browsers
+			return res;
+		}else{
+			return true;
 		}
+	}
+	static private function onExit(e:Event) 
+	{
+		doCleanup();
 	}
 	#end
 	
-	static private function callExitHandler(ind:Int) 
+	
+	
+	static private function handleExitEvent(preventDefault:Void->Void) :Bool
 	{
-		if (ind >= exitHandlers.length) {
+		if (ignoreExit) return false;
+		if (exitConfirmers.length > 0) {
+			callingExit = true;
+			callExitConfirmer(0);
+			if(callingExit) preventDefault();
+			return callingExit;
+		}else{
+			return true;
+		}
+	}
+	
+	static private function callExitConfirmer(ind:Int) 
+	{
+		if (ind >= exitConfirmers.length) {
+			callingExit = false;
 			#if flash
 				ignoreExit = true;
+				doCleanup();
 				NativeApplication.nativeApplication.exit();
 				ignoreExit = false;
 			#else
 				// NativeApplication not supported
 			#end
 		}else {
-			var exitHandler:ExitHandler = exitHandlers[ind];
-			exitHandler(doExitContinue.bind(_, ind + 1));
+			var ExitConfirmer:ExitConfirmer = exitConfirmers[ind];
+			ExitConfirmer(doExitContinue.bind(_, ind + 1));
 		}
 	}
 	
 	static private function doExitContinue(cont:Bool, ind:Int) 
 	{
-		if (!cont) return;
-		callExitHandler(ind);
+		if (!cont){
+			return;
+		}
+		callExitConfirmer(ind);
+	}
+	
+	static private function doCleanup() 
+	{
+		for (cleanup in exitCleanups){
+			try{
+			cleanup();
+			}catch(e:Dynamic){}
+		}
 	}
 	
 	
@@ -141,5 +212,6 @@ class App
 }
 
 
-typedef ExitHandler = ExitContinue -> Void;
+typedef ExitConfirmer = ExitContinue -> Void;
 typedef ExitContinue = Bool -> Void;
+typedef ExitCleanup = Void -> Void;

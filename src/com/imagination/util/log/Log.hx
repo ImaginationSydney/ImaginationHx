@@ -1,10 +1,10 @@
 package com.imagination.util.log;
-import haxe.PosInfos;
 
 #if !macro
 	import com.imagination.util.time.GlobalTime;
 #end
 
+import haxe.PosInfos;
 
 /**
  * ...

@@ -1,6 +1,10 @@
 package com.imagination.util.log;
-import com.imagination.util.time.GlobalTime;
 import haxe.PosInfos;
+
+#if !macro
+	import com.imagination.util.time.GlobalTime;
+#end
+
 
 /**
  * ...
@@ -46,7 +50,12 @@ class Log
 		
 		var ind:Int = INDICES.indexOf(level);
 		
-		var time:Date = GlobalTime.now();
+		#if macro
+			var time:Date = Date.now();
+		#else
+			var time:Date = GlobalTime.now();
+		#end
+		
 		var handlerList:Array<ILogHandler> = handlers[ind];
 		for(logger in handlerList) {
 			logger.log(source, level, rest, time);

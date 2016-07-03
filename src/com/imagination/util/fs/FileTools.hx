@@ -40,12 +40,12 @@ import com.imagination.air.util.EventListenerTracker;
 			var file:FlFile = new FlFile(path);
 			var stream:FileStream =  new FileStream();
 			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
-			listenerTracker.addEventListener(Event.COMPLETE, successHandler.bind(_, stream, listenerTracker, onComplete) );
-			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, failHandler.bind(_, stream, listenerTracker, onFail) );
+			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandler.bind(_, stream, listenerTracker, onComplete) );
+			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, readFailHandler.bind(_, stream, listenerTracker, onFail) );
 			stream.openAsync(file, FileMode.READ);
 		}
 		
-		static private function successHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
+		static private function readSuccessHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
 			var ret:String = stream.readUTFBytes(stream.bytesAvailable);
@@ -53,10 +53,34 @@ import com.imagination.air.util.EventListenerTracker;
 			onComplete(ret);
 		}
 		
-		static private function failHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onFail:String->Void):Void 
+		static private function readFailHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onFail:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
 			stream.close();
+			onFail(e.toString());
+		}
+		
+		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void, ?onFail:String->Void):Void
+		{
+			var file:FlFile = new FlFile(path);
+			var stream:FileStream =  new FileStream();
+			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+			listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
+			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
+			stream.openAsync(file, FileMode.WRITE);
+			stream.writeUTFBytes(content);
+			stream.close();
+		}
+		
+		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
+		{
+			listenerTracker.removeAllEventListeners();
+			onComplete();
+		}
+		
+		static private function writeFailHandler(e:Event, listenerTracker:EventListenerTracker, onFail:String->Void):Void 
+		{
+			listenerTracker.removeAllEventListeners();
 			onFail(e.toString());
 		}
 	}

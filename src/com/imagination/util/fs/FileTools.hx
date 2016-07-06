@@ -1,6 +1,10 @@
 package com.imagination.util.fs;
 import com.imagination.air.util.EventListenerTracker;
 
+#if sys
+import sys.FileSystem;
+#end
+
 /**
  * ...
  * @author Thomas Byrne
@@ -15,12 +19,13 @@ import com.imagination.air.util.EventListenerTracker;
 	
 	class FileTools
 	{
+		static var temp:FlFile = new FlFile();
 
 		public static function getContent(path:String):String
 		{
-			var file:FlFile = new FlFile(path);
+			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
-			stream.open(file, FileMode.READ);
+			stream.open(temp, FileMode.READ);
 			var ret:String = stream.readUTFBytes(stream.bytesAvailable);
 			stream.close();
 			return ret;
@@ -28,21 +33,21 @@ import com.imagination.air.util.EventListenerTracker;
 		
 		public static function saveContent(path:String, content:String):Void
 		{
-			var file:FlFile = new FlFile(path);
+			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
-			stream.open(file, FileMode.WRITE);
+			stream.open(temp, FileMode.WRITE);
 			stream.writeUTFBytes(content);
 			stream.close();
 		}
 		
 		public static function getContentAsync(path:String, onComplete:String->Void, ?onFail:String->Void):Void
 		{
-			var file:FlFile = new FlFile(path);
+			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
 			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
 			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandler.bind(_, stream, listenerTracker, onComplete) );
 			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, readFailHandler.bind(_, stream, listenerTracker, onFail) );
-			stream.openAsync(file, FileMode.READ);
+			stream.openAsync(temp, FileMode.READ);
 		}
 		
 		static private function readSuccessHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
@@ -62,26 +67,42 @@ import com.imagination.air.util.EventListenerTracker;
 		
 		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			var file:FlFile = new FlFile(path);
+			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
 			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
 			listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
 			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
-			stream.openAsync(file, FileMode.WRITE);
+			stream.openAsync(temp, FileMode.WRITE);
 			stream.writeUTFBytes(content);
 			stream.close();
 		}
-		
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
 			onComplete();
 		}
-		
 		static private function writeFailHandler(e:Event, listenerTracker:EventListenerTracker, onFail:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
 			onFail(e.toString());
+		}
+		
+		static public function exists(path:String) : Bool
+		{
+			temp.nativePath = path;
+			return temp.exists;
+		}
+		
+		static public function rename(path:String, newPath:String) : Bool
+		{
+			temp.nativePath = path;
+			temp.moveTo(new FlFile(newPath));
+			return temp.exists;
+		}
+		inline public static function deleteFile(path : String):Void
+		{
+			temp.nativePath = path;
+			temp.deleteFile();
 		}
 	}
 
@@ -95,6 +116,22 @@ import com.imagination.air.util.EventListenerTracker;
 		public static function getContentAsync(path:String, onComplete:String->Void):Void
 		{
 			onComplete(sys.io.File.getContent(path);
+		}
+		public static function saveContentAsync(path:String, content:String, onComplete:String->Void):Void
+		{
+			onComplete(sys.io.File.saveContent(path, content);
+		}
+		inline public static function exists(path:String):Bool
+		{
+			FileSystem.exists(path);
+		}
+		inline public static function rename(path : String, newPath : String):Void
+		{
+			FileSystem.rename(path, newPath);
+		}
+		inline public static function deleteFile(path : String):Void
+		{
+			FileSystem.deleteFile(path);
 		}
 		
 	}

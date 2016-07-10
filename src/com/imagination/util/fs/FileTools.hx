@@ -65,7 +65,7 @@ import sys.FileSystem;
 			onFail(e.toString());
 		}
 		
-		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void, ?onFail:String->Void):Void
+		public static function saveContentAsync(path:String, content:String, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
 			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
@@ -79,12 +79,12 @@ import sys.FileSystem;
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
-			onComplete();
+			if(onComplete != null) onComplete();
 		}
 		static private function writeFailHandler(e:Event, listenerTracker:EventListenerTracker, onFail:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
-			onFail(e.toString());
+			if(onFail != null) onFail(e.toString());
 		}
 		
 		static public function exists(path:String) : Bool

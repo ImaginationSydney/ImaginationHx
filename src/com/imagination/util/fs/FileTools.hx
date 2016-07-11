@@ -111,13 +111,13 @@ import com.imagination.air.util.EventListenerTracker;
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
-			onComplete();
+			if (onComplete != null) onComplete();
 		}
 		
 		static private function writeFailHandler(e:Event, listenerTracker:EventListenerTracker, onFail:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
-			onFail(e.toString());
+			if (onFail != null) onFail(e.toString());
 		}
 	}
 

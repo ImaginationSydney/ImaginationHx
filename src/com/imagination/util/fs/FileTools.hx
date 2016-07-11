@@ -103,14 +103,18 @@ import sys.FileSystem;
 		
 		public static function saveContentAsync(path:String, content:String, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			temp.nativePath = path;
-			var stream:FileStream =  new FileStream();
-			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
-			listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
-			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
-			stream.openAsync(temp, FileMode.WRITE);
-			stream.writeUTFBytes(content);
-			stream.close();
+			try{
+				temp.nativePath = path;
+				var stream:FileStream =  new FileStream();
+				var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+				listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
+				listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
+				stream.openAsync(temp, FileMode.WRITE);
+				stream.writeUTFBytes(content);
+				stream.close();
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(Std.string(e));
+			}
 		}
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{

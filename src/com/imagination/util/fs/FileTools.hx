@@ -80,7 +80,7 @@ import sys.FileSystem;
 			onFail(e.toString());
 		}
 		
-		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, onComplete:Void->Void, ?onFail:String->Void):Void
+		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {

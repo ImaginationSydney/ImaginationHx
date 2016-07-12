@@ -31,6 +31,21 @@ import sys.FileSystem;
 			return ret;
 		}
 		
+		public static function saveContentWithConfirm(path:String, content:String, confirm:String -> String -> Bool):Void
+		{
+			var temp:String = path + ".tmp";
+			saveContent(temp, content);
+			var savedContent:String = getContent(temp);
+			if (confirm(content, savedContent)) {
+				var file:File = new File(path);
+				var temp:File = new File(temp);
+				temp.copyTo(file, true);
+			}
+			else {
+				trace("failed to save content to: " + path);
+			}
+		}
+		
 		public static function saveContent(path:String, content:String):Void
 		{
 			temp.nativePath = path;
@@ -63,6 +78,27 @@ import sys.FileSystem;
 			listenerTracker.removeAllEventListeners();
 			stream.close();
 			onFail(e.toString());
+		}
+		
+		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, onComplete:Void->Void, ?onFail:String->Void):Void
+		{
+			var temp = path + ".tmp";
+			FileTools.saveContentAsync(temp, content, function() {
+				FileTools.getContentAsync(temp, function (savedContent:String) {
+					if (confirm(content, savedContent)) {
+						var file:File = new File(path);
+						var temp:File = new File(temp);
+						temp.copyToAsync(file, true);
+						if (onComplete != null) onComplete();
+					}
+					else {
+						trace("failed to save content to: " + path);
+						if (onFail != null) {
+							onFail("failed to save content to: " + path);
+						}
+					}
+				}, onFail);
+			}, onFail);
 		}
 		
 		public static function saveContentAsync(path:String, content:String, ?onComplete:Void->Void, ?onFail:String->Void):Void

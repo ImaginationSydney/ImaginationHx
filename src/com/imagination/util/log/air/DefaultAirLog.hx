@@ -64,10 +64,10 @@ class DefaultAirLog
 		}
 		var err:Error = cast(e.error);
 		if (err != null) {
-			Logger.error(e.target, message, err.errorID, err.getStackTrace());
+			Logger.error(e.target, message, err.errorID, criticalErrorCodes.indexOf(err.errorID), "\n"+err.getStackTrace());
 			
 			if (restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
-				Logger.info(e.target, "Critical error "+err.errorID+" caught, attempting restart");
+				Logger.error(e.target, "Critical error "+err.errorID+" caught, attempting restart");
 				Delay.byFrames(1, restartApp);
 			}
 		}else {

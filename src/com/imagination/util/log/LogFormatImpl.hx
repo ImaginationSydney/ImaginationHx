@@ -134,8 +134,9 @@ class LogFormatImpl
 				colorCode = "4:";
 		}
 		
-		
-		return colorCode + padStr(getType(source), 35)+" " + rest.join(" ");
+		var msg = rest.join(" ");
+		msg = msg.split("\n").join("\n"+colorCode);
+		return colorCode + padStr(getType(source), 35)+" " + msg;
 	}
 	
 	private static function getType(source:Dynamic):String

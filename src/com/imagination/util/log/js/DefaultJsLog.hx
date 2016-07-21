@@ -14,6 +14,8 @@ class DefaultJsLog
 		
 		Log.mapHandler(new TraceLogger(LogFormatImpl.cleanFormat), Log.ALL_LEVELS);
 		
+		Log.mapHandler(new ReloadPageLogger(), LogLevel.CRITICAL_ERROR);
+		
 		CustomTrace.install();
 	}
 	

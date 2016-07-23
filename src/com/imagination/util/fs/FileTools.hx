@@ -144,6 +144,18 @@ import sys.FileSystem;
 			temp.nativePath = path;
 			temp.deleteFile();
 		}
+		
+		static public function deleteDirectory(path : String) :Void
+		{
+			temp.nativePath = path;
+			temp.deleteDirectory();
+		}
+		
+		static public function createDirectory(path : String) :Void
+		{
+			temp.nativePath = path;
+			temp.createDirectory();
+		}
 	}
 
 	

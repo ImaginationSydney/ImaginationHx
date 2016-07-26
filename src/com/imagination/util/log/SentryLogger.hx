@@ -30,14 +30,11 @@ class SentryLogger implements ILogHandler
 		switch(level) {
 			case LogLevel.INFO:
 				levelCode = 10;
-				//Raven.captureMessage(msg);
 			case LogLevel.LOG:
 				levelCode = 20;
-				//Raven.captureMessage(msg);
 			case LogLevel.WARN:
 				levelCode = 30;
-				//Raven.captureMessage(msg);
-			case LogLevel.ERROR:
+			case LogLevel.ERROR | LogLevel.CRITICAL_ERROR:
 				levelCode = 40;
 				attemptErr = true;
 			case LogLevel.UNCAUGHT_ERROR:

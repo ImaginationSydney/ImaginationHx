@@ -80,7 +80,7 @@ import sys.FileSystem;
 			onFail(e.toString());
 		}
 		
-		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, onComplete:Void->Void, ?onFail:String->Void):Void
+		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {
@@ -103,14 +103,18 @@ import sys.FileSystem;
 		
 		public static function saveContentAsync(path:String, content:String, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			temp.nativePath = path;
-			var stream:FileStream =  new FileStream();
-			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
-			listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
-			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
-			stream.openAsync(temp, FileMode.WRITE);
-			stream.writeUTFBytes(content);
-			stream.close();
+			try{
+				temp.nativePath = path;
+				var stream:FileStream =  new FileStream();
+				var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+				listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
+				listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
+				stream.openAsync(temp, FileMode.WRITE);
+				stream.writeUTFBytes(content);
+				stream.close();
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(Std.string(e));
+			}
 		}
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
@@ -139,6 +143,18 @@ import sys.FileSystem;
 		{
 			temp.nativePath = path;
 			temp.deleteFile();
+		}
+		
+		static public function deleteDirectory(path : String) :Void
+		{
+			temp.nativePath = path;
+			temp.deleteDirectory();
+		}
+		
+		static public function createDirectory(path : String) :Void
+		{
+			temp.nativePath = path;
+			temp.createDirectory();
 		}
 	}
 

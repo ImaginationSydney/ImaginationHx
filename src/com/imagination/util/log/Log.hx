@@ -12,8 +12,8 @@ import haxe.PosInfos;
  */
 class Log
 {
-	static public var ALL_LEVELS:Int = untyped (LogLevel.INFO | LogLevel.LOG | LogLevel.WARN | LogLevel.ERROR | LogLevel.UNCAUGHT_ERROR);
-	static private var INDICES:Array<LogLevel> = [LogLevel.INFO , LogLevel.LOG , LogLevel.WARN , LogLevel.ERROR , LogLevel.UNCAUGHT_ERROR];
+	static public var ALL_LEVELS:Int = (LogLevel.INFO | LogLevel.LOG | LogLevel.WARN | LogLevel.ERROR | LogLevel.CRITICAL_ERROR | LogLevel.UNCAUGHT_ERROR);
+	static private var INDICES:Array<LogLevel> = [LogLevel.INFO , LogLevel.LOG , LogLevel.WARN , LogLevel.ERROR, LogLevel.CRITICAL_ERROR , LogLevel.UNCAUGHT_ERROR];
 	
 	private static var handlers:Array<Array<ILogHandler>>;
 
@@ -68,6 +68,7 @@ class Log
 		mapHandlerToLevel(handler, levels, LogLevel.LOG, INDICES.indexOf(LogLevel.LOG));
 		mapHandlerToLevel(handler, levels, LogLevel.WARN, INDICES.indexOf(LogLevel.WARN));
 		mapHandlerToLevel(handler, levels, LogLevel.ERROR, INDICES.indexOf(LogLevel.ERROR));
+		mapHandlerToLevel(handler, levels, LogLevel.CRITICAL_ERROR, INDICES.indexOf(LogLevel.CRITICAL_ERROR));
 		mapHandlerToLevel(handler, levels, LogLevel.UNCAUGHT_ERROR, INDICES.indexOf(LogLevel.UNCAUGHT_ERROR));
 	}
 	
@@ -82,10 +83,11 @@ class Log
 }
 
 @:enum
-abstract LogLevel(Int) {
+abstract LogLevel(Int) to Int {
 	var INFO = 1;
 	var LOG = 2;
 	var WARN = 4;
 	var ERROR = 8;
-	var UNCAUGHT_ERROR = 16;
+	var CRITICAL_ERROR = 16;
+	var UNCAUGHT_ERROR = 32;
 }

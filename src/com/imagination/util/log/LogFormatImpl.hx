@@ -31,6 +31,9 @@ class LogFormatImpl
 			case LogLevel.ERROR:
 				msg = "ERR: ";
 				
+			case LogLevel.CRITICAL_ERROR:
+				msg = "CRT: ";
+				
 			case LogLevel.UNCAUGHT_ERROR:
 				msg = "UNC: ";
 		}
@@ -51,6 +54,9 @@ class LogFormatImpl
 				color = "e59400";
 				
 			case LogLevel.ERROR:
+				color = "f00";
+				
+			case LogLevel.CRITICAL_ERROR:
 				color = "f00";
 				
 			case LogLevel.UNCAUGHT_ERROR:
@@ -80,6 +86,9 @@ class LogFormatImpl
 			case LogLevel.ERROR:
 				color = "ff0000";
 				
+			case LogLevel.CRITICAL_ERROR:
+				color = "ff0000";
+				
 			case LogLevel.UNCAUGHT_ERROR:
 				color = "dd0000";
 		}
@@ -104,26 +113,30 @@ class LogFormatImpl
 	
 	public static function fdFormat(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):String
 	{
-		var msg:String;
+		var colorCode:String;
 		switch(level) {
 			case LogLevel.INFO:
-				msg = "0:";
+				colorCode = "0:";
 				
 			case LogLevel.LOG:
-				msg = "1:";
+				colorCode = "1:";
 				
 			case LogLevel.WARN:
-				msg = "2:";
+				colorCode = "2:";
 				
 			case LogLevel.ERROR:
-				msg = "3:";
+				colorCode = "3:";
+				
+			case LogLevel.CRITICAL_ERROR:
+				colorCode = "3";
 				
 			case LogLevel.UNCAUGHT_ERROR:
-				msg = "4:";
+				colorCode = "4:";
 		}
 		
-		
-		return msg + padStr(getType(source), 35)+" " + rest.join(" ");
+		var msg = rest.join(" ");
+		msg = msg.split("\n").join("\n"+colorCode);
+		return colorCode + padStr(getType(source), 35)+" " + msg;
 	}
 	
 	private static function getType(source:Dynamic):String

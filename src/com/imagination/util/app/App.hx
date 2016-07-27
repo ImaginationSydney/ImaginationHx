@@ -81,9 +81,16 @@ class App
 	
 	static public function exit(errorCode:Int = 0) 
 	{
+		if (exitingErrorCode != null || ignoreExit){
+			return;
+		}
 		exitingErrorCode = errorCode;
 		#if flash
-			NativeApplication.nativeApplication.exit(errorCode);
+			var event = new Event(Event.EXITING, false, true);
+			NativeApplication.nativeApplication.dispatchEvent(event);
+			if (!event.isDefaultPrevented()){
+				finaliseExit(errorCode);
+			}
 		#else
 			// NativeApplication not supported
 		#end
@@ -121,6 +128,7 @@ class App
 	#if flash
 	static private function onBeginExit(e:Event):Void 
 	{
+		trace("onBeginExit: " + exitingErrorCode);
 		var errorCode:Int;
 		if (exitingErrorCode == null){
 			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
@@ -157,10 +165,10 @@ class App
 	static private function handleExitEvent(errorCode:Int, preventDefault:Void->Void) :Bool
 	{
 		if (ignoreExit) return false;
-		if (exitConfirmers.length > 0) {
+		if (exitConfirmers.length > 0 || exitCleanups.length > 0) {
 			callingExit = true;
+			preventDefault();
 			callExitConfirmer(errorCode, 0);
-			if(callingExit) preventDefault();
 			return callingExit;
 		}else{
 			return true;
@@ -170,12 +178,11 @@ class App
 	static private function callExitConfirmer(errorCode:Int, ind:Int) 
 	{
 		if (ind >= exitConfirmers.length) {
-			callingExit = false;
 			#if flash
 				ignoreExit = true;
 				// hide windows
 				for (win in NativeApplication.nativeApplication.openedWindows){
-					win.deactivate();
+					win.visible = false;
 				}
 				callExitCleanup(errorCode, 0);
 			#else
@@ -198,16 +205,24 @@ class App
 	static private function callExitCleanup(errorCode:Int, ind:Int) 
 	{
 		if (ind >= exitCleanups.length) {
-			#if flash
-				NativeApplication.nativeApplication.exit(errorCode);
-				ignoreExit = false;
-			#else
-				// NativeApplication not supported
-			#end
+			callingExit = false;
+			finaliseExit(errorCode);
 		}else {
 			var exitCleanup:ExitCleanup = exitCleanups[ind];
 			exitCleanup(errorCode, callExitCleanup.bind(errorCode, ind + 1));
 		}
+	}
+	
+	static private function finaliseExit(errorCode:Int) 
+	{
+		#if flash
+			for (window in NativeApplication.nativeApplication.openedWindows){
+				window.close();
+			}
+			NativeApplication.nativeApplication.exit(errorCode);
+		#else
+			// NativeApplication not supported
+		#end
 	}
 	
 	/*static private function doCleanup() 

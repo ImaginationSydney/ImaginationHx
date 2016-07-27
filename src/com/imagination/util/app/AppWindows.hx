@@ -1,6 +1,7 @@
 package com.imagination.util.app;
 import flash.desktop.NativeApplication;
 import flash.display.NativeWindow;
+import flash.display.NativeWindowSystemChrome;
 import openfl.events.Event;
 
 /**
@@ -17,6 +18,7 @@ class AppWindows
 	
 	var app:NativeApplication;
 	var autoExit:Bool;
+	var windowToError:Map<NativeWindow, Int> = new Map();
 
 	public function new() 
 	{
@@ -35,14 +37,23 @@ class AppWindows
 	public function windowAdded(window:NativeWindow) 
 	{
 		window.addEventListener(Event.CLOSE, onWindowClose);
+		window.addEventListener(Event.CLOSING, onWindowClosing);
+	}
+	
+	private function onWindowClosing(e:Event):Void 
+	{
+		var window:NativeWindow = untyped e.currentTarget;
+		windowToError.set(window, window.systemChrome == NativeWindowSystemChrome.NONE ? 1 : 0);
 	}
 	
 	private function onWindowClose(e:Event):Void 
 	{
-		var window = e.currentTarget;
+		var window:NativeWindow = untyped e.currentTarget;
 		window.removeEventListener(Event.CLOSE, onWindowClose);
+		window.removeEventListener(Event.CLOSING, onWindowClosing);
 		if (autoExit && app.openedWindows.length == 0){
-			App.exit();
+			var exitCode = (windowToError.exists(window) ? windowToError.get(window) : 1);
+			App.exit(exitCode);
 		}
 	}
 	

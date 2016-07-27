@@ -20,17 +20,28 @@ import js.html.Event;
  * ...
  * @author Thomas Byrne
  */
+@:access(com.imagination.util.app.AppWindows)
 class App
 {
 	static private var appId:String;
 	static private var version:String;
 	static private var appFilename:String;
 	
+	#if flash
+	@:isVar static public var windows(get, null):AppWindows = new AppWindows();
+	static function get_windows():AppWindows 
+	{
+		checkManifest();
+		return windows;
+	}
+	#end
+	
 	static private var exitConfirmers:Array<ExitConfirmer>;
 	static private var exitCleanups:Array<ExitCleanup>;
 	static private var ignoreExit:Bool;
 	static private var callingExit:Bool;
 	static private var isSetup:Bool;
+	static private var exitingErrorCode:Null<Int>;
 	
 	public static function getAppId():String 
 	{
@@ -38,13 +49,13 @@ class App
 		return appId;
 	}
 	
-	static public function getAppFilename() 
+	static public function getAppFilename() : String
 	{
 		checkManifest();
 		return appFilename;
 	}
 	
-	static public function getVersion() 
+	static public function getVersion() : String
 	{
 		checkManifest();
 		return version;
@@ -68,31 +79,32 @@ class App
 		#end
 	}
 	
-	static public function exit() 
+	static public function exit(errorCode:Int = 0) 
 	{
+		exitingErrorCode = errorCode;
 		#if flash
-			NativeApplication.nativeApplication.exit();
+			NativeApplication.nativeApplication.exit(errorCode);
 		#else
 			// NativeApplication not supported
 		#end
+		exitingErrorCode = null;
 	}
 	
-	static public function addExitConfirmer(handler:ExitContinue -> Void) 
+	static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
 	{
-		
 		if (exitConfirmers == null) {
 			setup();
 		}
 		exitConfirmers.push(handler);
 		
 	}
-	static public function removeExitConfirmer(handler:ExitContinue -> Void) 
+	static public function removeExitConfirmer(handler:Int -> ExitContinue -> Void) 
 	{
 		exitConfirmers.remove(handler);
 	}
 	
 	
-	static public function addExitCleanup(handler:Void -> Void) 
+	static public function addExitCleanup(handler:Int -> (Void -> Void) -> Void) 
 	{
 		
 		if (exitCleanups == null) {
@@ -101,7 +113,7 @@ class App
 		exitCleanups.push(handler);
 		
 	}
-	static public function removeExitCleanup(handler:Void -> Void) 
+	static public function removeExitCleanup(handler:Int -> (Void -> Void) -> Void) 
 	{
 		exitCleanups.remove(handler);
 	}
@@ -109,12 +121,25 @@ class App
 	#if flash
 	static private function onBeginExit(e:Event):Void 
 	{
-		handleExitEvent(e.preventDefault);
+		var errorCode:Int;
+		if (exitingErrorCode == null){
+			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
+		}else{
+			errorCode = exitingErrorCode;
+		}
+		trace("onBeginExit: "+errorCode+" "+exitingErrorCode);
+		handleExitEvent(errorCode, e.preventDefault);
 	}
 	#elseif js
 	static private function onBeginExit(e:Event):Bool 
 	{
-		if (!handleExitEvent(e.preventDefault)){
+		var errorCode:Int;
+		if (exitingErrorCode == null){
+			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
+		}else{
+			errorCode = exitingErrorCode;
+		}
+		if (!handleExitEvent(errorCode, e.preventDefault)){
 			var res = js.Browser.window.confirm("You will loose unsaved work"); // This message will be replaced by most browsers
 			return res;
 		}else{
@@ -123,18 +148,18 @@ class App
 	}
 	static private function onExit(e:Event) 
 	{
-		doCleanup();
+		callExitCleanup(0);
 	}
 	#end
 	
 	
 	
-	static private function handleExitEvent(preventDefault:Void->Void) :Bool
+	static private function handleExitEvent(errorCode:Int, preventDefault:Void->Void) :Bool
 	{
 		if (ignoreExit) return false;
 		if (exitConfirmers.length > 0) {
 			callingExit = true;
-			callExitConfirmer(0);
+			callExitConfirmer(errorCode, 0);
 			if(callingExit) preventDefault();
 			return callingExit;
 		}else{
@@ -142,40 +167,57 @@ class App
 		}
 	}
 	
-	static private function callExitConfirmer(ind:Int) 
+	static private function callExitConfirmer(errorCode:Int, ind:Int) 
 	{
 		if (ind >= exitConfirmers.length) {
 			callingExit = false;
 			#if flash
 				ignoreExit = true;
-				doCleanup();
-				NativeApplication.nativeApplication.exit();
+				// hide windows
+				for (win in NativeApplication.nativeApplication.openedWindows){
+					win.deactivate();
+				}
+				callExitCleanup(errorCode, 0);
+			#else
+				// NativeApplication not supported
+			#end
+		}else {
+			var exitConfirmer:ExitConfirmer = exitConfirmers[ind];
+			exitConfirmer(errorCode, doExitContinue.bind(_, errorCode, ind + 1));
+		}
+	}
+	
+	static private function doExitContinue(cont:Bool, errorCode:Int, ind:Int) 
+	{
+		if (!cont){
+			return;
+		}
+		callExitConfirmer(errorCode, ind);
+	}
+	
+	static private function callExitCleanup(errorCode:Int, ind:Int) 
+	{
+		if (ind >= exitCleanups.length) {
+			#if flash
+				NativeApplication.nativeApplication.exit(errorCode);
 				ignoreExit = false;
 			#else
 				// NativeApplication not supported
 			#end
 		}else {
-			var ExitConfirmer:ExitConfirmer = exitConfirmers[ind];
-			ExitConfirmer(doExitContinue.bind(_, ind + 1));
+			var exitCleanup:ExitCleanup = exitCleanups[ind];
+			exitCleanup(errorCode, callExitCleanup.bind(errorCode, ind + 1));
 		}
 	}
 	
-	static private function doExitContinue(cont:Bool, ind:Int) 
-	{
-		if (!cont){
-			return;
-		}
-		callExitConfirmer(ind);
-	}
-	
-	static private function doCleanup() 
+	/*static private function doCleanup() 
 	{
 		for (cleanup in exitCleanups){
 			try{
-			cleanup();
+				cleanup();
 			}catch(e:Dynamic){}
 		}
-	}
+	}*/
 	
 	
 	static private function checkManifest() 
@@ -200,6 +242,8 @@ class App
 			version = versionNode.next().firstChild().nodeValue;
 			break;
 		}
+		windows.checkManifest(appXml);
+		
 		#elseif openfl
 			var stage:Stage = Lib.current.stage;
 			if (stage == null || stage.window == null) return;
@@ -208,10 +252,11 @@ class App
 			appFilename = stage.window.application.config.name;
 			version = stage.window.application.config.version;
 		#end
+		
 	}
 }
 
 
-typedef ExitConfirmer = ExitContinue -> Void;
+typedef ExitConfirmer = Int -> ExitContinue -> Void;
 typedef ExitContinue = Bool -> Void;
-typedef ExitCleanup = Void -> Void;
+typedef ExitCleanup = Int -> (Void -> Void) -> Void;

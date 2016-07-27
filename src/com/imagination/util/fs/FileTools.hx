@@ -49,6 +49,7 @@ import sys.FileSystem;
 		public static function saveContent(path:String, content:String):Void
 		{
 			temp.nativePath = path;
+			confirmParent(temp);
 			var stream:FileStream =  new FileStream();
 			stream.open(temp, FileMode.WRITE);
 			stream.writeUTFBytes(content);
@@ -105,6 +106,7 @@ import sys.FileSystem;
 		{
 			try{
 				temp.nativePath = path;
+				confirmParent(temp);
 				var stream:FileStream =  new FileStream();
 				var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
 				listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
@@ -141,20 +143,32 @@ import sys.FileSystem;
 		}
 		inline public static function deleteFile(path : String):Void
 		{
+			if (!exists(path)) return;
 			temp.nativePath = path;
 			temp.deleteFile();
 		}
 		
-		static public function deleteDirectory(path : String) :Void
+		static public function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void
 		{
+			if (!exists(path)) return;
 			temp.nativePath = path;
-			temp.deleteDirectory();
+			temp.deleteDirectory(deleteDirectoryContents);
 		}
 		
 		static public function createDirectory(path : String) :Void
 		{
 			temp.nativePath = path;
 			temp.createDirectory();
+		}
+		
+		
+		
+		
+		static private function confirmParent(temp:FlFile) 
+		{
+			if (!temp.parent.exists){
+				temp.parent.createDirectory();
+			}
 		}
 	}
 

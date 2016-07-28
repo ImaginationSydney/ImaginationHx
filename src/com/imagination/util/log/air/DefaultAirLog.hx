@@ -76,7 +76,7 @@ class DefaultAirLog
 		}
 		var err:Error = cast(e.error);
 		if (err != null) {
-			Logger.error(e.target, message, err.errorID, criticalErrorCodes.indexOf(err.errorID), "\n"+err.getStackTrace());
+			Log.log(e.target, LogLevel.UNCAUGHT_ERROR, [criticalErrorCodes.indexOf(err.errorID), "\n"+err.getStackTrace()]);
 			
 			if (restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
 				Logger.error(e.target, "Critical error "+err.errorID+" caught, attempting restart");

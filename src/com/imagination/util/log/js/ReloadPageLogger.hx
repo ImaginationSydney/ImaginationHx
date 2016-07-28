@@ -17,7 +17,7 @@ class ReloadPageLogger implements ILogHandler
 	}
 	
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void 
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void 
 	{
 		js.Browser.location.reload();
 	}

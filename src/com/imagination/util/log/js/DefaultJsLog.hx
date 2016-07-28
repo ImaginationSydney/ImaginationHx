@@ -14,15 +14,9 @@ class DefaultJsLog
 		
 		Log.mapHandler(new TraceLogger(LogFormatImpl.cleanFormat), Log.ALL_LEVELS);
 		
-		Log.mapHandler(new ReloadPageLogger(), LogLevel.CRITICAL_ERROR);
+		Log.mapHandler(new ReloadPageLogger(), [LogLevel.CRITICAL_ERROR]);
 		
 		CustomTrace.install();
 	}
-	
-	/*public static function installSentry(sentryDsn:String, ?terminalName:String):Void
-	{
-		if(terminalName==null)Logger.log(DefaultJsLog, "No 'terminalName' found, will track using IP address (set this up with global config in ~/Docs/imagination/_global/config.json)");
-		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), untyped(LogLevel.UNCAUGHT_ERROR | LogLevel.ERROR | LogLevel.WARN));
-	}*/
 	
 }

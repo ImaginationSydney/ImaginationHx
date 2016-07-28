@@ -9,21 +9,18 @@ class LogFormatImpl
 {
 
 	
-	public static function cleanFormat(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):String
+	public static function cleanFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
 		return getType(source)+" " + rest.join(" ");
 	}
 
 	
-	public static function format(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):String
+	public static function format(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
 		var msg:String;
 		switch(level) {
 			case LogLevel.INFO:
 				msg = "INF: ";
-				
-			case LogLevel.LOG:
-				msg = "LOG: ";
 				
 			case LogLevel.WARN:
 				msg = "WRN: ";
@@ -36,19 +33,19 @@ class LogFormatImpl
 				
 			case LogLevel.UNCAUGHT_ERROR:
 				msg = "UNC: ";
+				
+			default: // | LogLevel.LOG:
+				msg = "LOG: ";
 		}
 		return msg + getType(source)+" " + rest.join(" ");
 	}
 	
-	public static function htmlFormat(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):String
+	public static function htmlFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
 		var color:String;
 		switch(level) {
 			case LogLevel.INFO:
 				color = "444";
-				
-			case LogLevel.LOG:
-				color = "000";
 				
 			case LogLevel.WARN:
 				color = "e59400";
@@ -61,6 +58,9 @@ class LogFormatImpl
 				
 			case LogLevel.UNCAUGHT_ERROR:
 				color = "d00";
+				
+			default: // | LogLevel.LOG:
+				color = "000";
 		}
 		var timestamp:String = padNum(time.getHours(), 2) + ":" + padNum(time.getMinutes(), 2) + ":" + padNum(time.getSeconds(), 2);
 		var content = StringTools.htmlEscape(rest.join(" "));
@@ -70,15 +70,12 @@ class LogFormatImpl
 		return "<div><code style='font-size:12px;color:#"+color+"'>" + msg + "</code></div>";
 	}
 	
-	public static function flashHtmlFormat(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):String
+	public static function flashHtmlFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
 		var color:String;
 		switch(level) {
 			case LogLevel.INFO:
 				color = "777777";
-				
-			case LogLevel.LOG:
-				color = "000000";
 				
 			case LogLevel.WARN:
 				color = "e59400";
@@ -91,6 +88,9 @@ class LogFormatImpl
 				
 			case LogLevel.UNCAUGHT_ERROR:
 				color = "dd0000";
+				
+			default: // | LogLevel.LOG:
+				color = "000000";
 		}
 		var timestamp:String = padNum(time.getHours(), 2) + ":" + padNum(time.getMinutes(), 2) + ":" + padNum(time.getSeconds(), 2);
 		var msg:String = '<font color="#555555">'+timestamp+" "+getType(source)+"</font> " + StringTools.htmlEscape(rest.join(" "));
@@ -111,15 +111,12 @@ class LogFormatImpl
 		return str;
 	}
 	
-	public static function fdFormat(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):String
+	public static function fdFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
 		var colorCode:String;
 		switch(level) {
 			case LogLevel.INFO:
 				colorCode = "0:";
-				
-			case LogLevel.LOG:
-				colorCode = "1:";
 				
 			case LogLevel.WARN:
 				colorCode = "2:";
@@ -132,6 +129,9 @@ class LogFormatImpl
 				
 			case LogLevel.UNCAUGHT_ERROR:
 				colorCode = "4:";
+				
+			default: // | LogLevel.LOG:
+				colorCode = "1:";
 		}
 		
 		var msg = rest.join(" ");
@@ -139,7 +139,7 @@ class LogFormatImpl
 		return colorCode + padStr(getType(source), 35)+" " + msg;
 	}
 	
-	private static function getType(source:Dynamic):String
+	public static function getType(source:Dynamic):String
 	{
 		if (Std.is(source, String)) {
 			return source;

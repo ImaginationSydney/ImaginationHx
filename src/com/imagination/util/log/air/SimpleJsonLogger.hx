@@ -90,6 +90,7 @@ class SimpleJsonLogger implements ILogHandler
 		str = str.split("\n").join("\\n");
 		str = str.split("\r").join("\\r");
 		str = str.split("\t").join("\\t");
+		str = str.split('"').join('\\"');
 		return str;
 	}
 }

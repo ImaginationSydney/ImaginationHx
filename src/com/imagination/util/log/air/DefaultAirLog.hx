@@ -32,13 +32,13 @@ class DefaultAirLog
 			Log.mapHandler(new TraceLogger(LogFormatImpl.fdFormat), Log.ALL_LEVELS);
 		//}
 		
-		Log.mapHandler(new AirFileLogger(docsDir + "log", true), Log.ALL_LEVELS);
+		Log.mapHandler(new HtmlFileLogger(docsDir + "log", true), Log.ALL_LEVELS);
 		
-		Log.mapHandler(new AirFileLogger(docsDir + "errorLog", false), (LogLevel.UNCAUGHT_ERROR | LogLevel.ERROR | LogLevel.CRITICAL_ERROR));
+		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
 		
-		Log.mapHandler(new AirFileLogger(docsDir + "errorLog", false), LogLevel.CRITICAL_ERROR);
+		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.CRITICAL_ERROR]);
 		
-		if(restartApp != null) Log.mapHandler(new MethodCallLogger(restartApp), LogLevel.CRITICAL_ERROR);
+		if(restartApp != null) Log.mapHandler(new MethodCallLogger(restartApp), [LogLevel.CRITICAL_ERROR]);
 		
 		root.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError.bind(_, restartApp));
 		
@@ -48,7 +48,15 @@ class DefaultAirLog
 	public static function installSentry(sentryDsn:String, ?terminalName:String):Void
 	{
 		if(terminalName==null)Logger.log(DefaultAirLog, "No 'terminalName' found, will track using IP address (set this up with global config in ~/Docs/imagination/_global/config.json)");
-		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), (LogLevel.UNCAUGHT_ERROR | LogLevel.ERROR | LogLevel.CRITICAL_ERROR | LogLevel.WARN));
+		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR, LogLevel.WARN]);
+	}
+	
+	
+	public static function installIdmLog():Void
+	{
+		var docsDir:String  = Files.appDocsDir();
+		var jsonLogger:SimpleJsonLogger = new SimpleJsonLogger(docsDir + "idm/log", false);
+		Log.mapHandler(jsonLogger, [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
 	}
 	
 	private static function onUncaughtError(e:UncaughtErrorEvent, ?restartApp:Void->Void):Void 
@@ -68,7 +76,7 @@ class DefaultAirLog
 		}
 		var err:Error = cast(e.error);
 		if (err != null) {
-			Logger.error(e.target, message, err.errorID, criticalErrorCodes.indexOf(err.errorID), "\n"+err.getStackTrace());
+			Log.log(e.target, LogLevel.UNCAUGHT_ERROR, [criticalErrorCodes.indexOf(err.errorID), "\n"+err.getStackTrace()]);
 			
 			if (restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
 				Logger.error(e.target, "Critical error "+err.errorID+" caught, attempting restart");

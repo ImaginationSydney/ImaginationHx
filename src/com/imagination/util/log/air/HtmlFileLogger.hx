@@ -17,7 +17,7 @@ using com.imagination.worker.ext.FileSysTasks;
  * ...
  * @author Thomas Byrne
  */
-class AirFileLogger implements ILogHandler
+class HtmlFileLogger implements ILogHandler
 {
 	private static var MAX_LOG_SIZE:Int = 2 * 1024 * 1024; // 2 mb
 	private static var WRITE_EVERY:Int = 5000; // ms
@@ -59,7 +59,7 @@ class AirFileLogger implements ILogHandler
 		this.doDelay = viaWorker;
 		
 		if (viaWorker) {
-			workerSwitch = WorkerSwitchboard.getInstance();
+			workerSwitch = WorkerSwitchboard.getWorker();
 		}else {
 			workerSwitch = WorkerSwitchboard.getInstance();
 		}
@@ -104,7 +104,7 @@ class AirFileLogger implements ILogHandler
 	}
 	
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void 
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void 
 	{
 		logArray.push(formatter(source, level, rest, time));
 		

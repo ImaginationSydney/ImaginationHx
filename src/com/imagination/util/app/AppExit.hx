@@ -54,7 +54,8 @@ class AppExit
 			return;
 		}
 		exitingErrorCode = errorCode;
-		#if flash
+		handleExitEvent(errorCode, function(){});
+		/*#if flash
 			var event = new Event(Event.EXITING, false, true);
 			NativeApplication.nativeApplication.dispatchEvent(event);
 			if (!event.isDefaultPrevented()){
@@ -62,7 +63,7 @@ class AppExit
 			}
 		#else
 			// NativeApplication not supported
-		#end
+		#end*/
 		exitingErrorCode = null;
 	}
 	

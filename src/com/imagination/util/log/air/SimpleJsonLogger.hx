@@ -1,5 +1,6 @@
 package com.imagination.util.log.air;
 import com.imagination.delay.EnterFrame;
+import com.imagination.util.fs.FileTools;
 import com.imagination.util.fs.Files;
 import com.imagination.util.time.GlobalTime;
 import com.imagination.worker.ext.FileSysTasks;
@@ -11,6 +12,7 @@ import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 import flash.Lib;
 import haxe.Timer;
+import haxe.crypto.Md5;
 
 using com.imagination.worker.ext.FileSysTasks;
 
@@ -25,7 +27,7 @@ class SimpleJsonLogger implements ILogHandler
 	private var dir:String;
 	private var fileExt:String;
 	
-	private var lastFileInd:Int = 0;
+	//private var lastFileInd:Int = 0;
 	
 	public function new(dir:String, viaWorker:Bool, fileExt:String="json"):Void
 	{
@@ -52,9 +54,9 @@ class SimpleJsonLogger implements ILogHandler
 				var dotInd:Int = path.lastIndexOf(".");
 				name = name.substr(0, dotInd);
 				var ind:Int = Std.parseInt(name);
-				if (lastFileInd < ind){
+				/*if (lastFileInd < ind){
 					lastFileInd = ind;
-				}
+				}*/
 			}
 		}
 	}
@@ -67,22 +69,29 @@ class SimpleJsonLogger implements ILogHandler
 			timezoneOffset = untyped time.getTimezoneOffset();
 		#end
 		
-		var msg = jsonEscape(rest.join("\n\n"));
-		var write = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg + '",\n\t"time":' + time.getTime() + ',\n\t"timezoneOffset":' + timezoneOffset + '\n}';
+		var msg = rest.join("\n\n");
+		var hash = Md5.encode(msg);
+		msg = jsonEscape(msg);
+		var ts = time.getTime();
+		var write = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg + '",\n\t"time":' + ts + ',\n\t"timezoneOffset":' + timezoneOffset + '\n}';
 		
-		attemptWrite(write);
+		attemptWrite(write, hash, ts);
 	}
 	
-	function attemptWrite(write:String) 
+	function attemptWrite(write:String, hash:String, time:Float) 
 	{
-		var path = dir + "/" + lastFileInd + "." + fileExt;
-		lastFileInd++;
-		workerSwitch.writeTextToFile(path, write, null, onError.bind(_, write));
+		var path = dir + "/" + hash + "." + fileExt;
+		if (FileTools.exists(path)){
+			workerSwitch.appendTextToFile(path, "<" + time + ">", null, onError.bind(_, write, hash, time));
+		}else{
+			//lastFileInd++;
+			workerSwitch.writeTextToFile(path, write, null, onError.bind(_, write, hash, time));
+		}
 	}
 	
-	function onError(err:String, write:String) 
+	function onError(err:String, write:String, hash:String, time:Float) 
 	{
-		attemptWrite(write);
+		attemptWrite(write, hash, time);
 	}
 	
 	function jsonEscape(str  :String) : String  {

@@ -110,10 +110,14 @@ class CliTool
 			}
 		}
 	}
-	
 	private function addOps() 
 	{
-		addOp(HelpOp.NAME, new HelpOp(opNames, opMap));
+		// override me
+	}
+	
+	private function addHelpOp(toolName:String, version:String) 
+	{
+		addOp(HelpOp.NAME, new HelpOp(opNames, opMap, toolName, version));
 	}
 	
 	private function addOp(opName:String, op:IOp) 

@@ -57,35 +57,37 @@ class PrintTools
 		var prepend:String = "";
 		var append:String = "";
 		var forceUpper:Bool = false;
-		switch(style){
-			case ERROR:
-				textColor = Red;
-				forceUpper = true;
-				
-			case HELP:
-				textColor = White;
-				bgColor = Blue;
-				
-			case INFO:
-				textColor = LightGray;
-				textColor = DarkGray;
-				
-			case PROGRESS_INFO:
-				textColor = White;
-				
-			case WARNING:
-				textColor = LightYellow;
-				forceUpper = true;
-				
-			case MENU_HEADING:
-				textColor = LightBlue;
-				prepend = " -- ";
-				append = " -- ";
-				forceUpper = true;
-				
-			case MENU_OPTION:
-				textColor = LightGray;
-				prepend = "   ";
+		if(style != null){
+			switch(style){
+				case ERROR:
+					textColor = Red;
+					forceUpper = true;
+					
+				case HELP:
+					textColor = White;
+					bgColor = Blue;
+					
+				case INFO:
+					textColor = LightGray;
+					textColor = DarkGray;
+					
+				case PROGRESS_INFO:
+					textColor = White;
+					
+				case WARNING:
+					textColor = LightYellow;
+					forceUpper = true;
+					
+				case MENU_HEADING:
+					textColor = LightBlue;
+					prepend = " -- ";
+					append = " -- ";
+					forceUpper = true;
+					
+				case MENU_OPTION:
+					textColor = LightGray;
+					prepend = "   ";
+			}
 		}
 		
 		if (forceUpper) msg = msg.toUpperCase();

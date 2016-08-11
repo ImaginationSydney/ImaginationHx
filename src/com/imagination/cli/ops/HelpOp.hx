@@ -17,12 +17,16 @@ class HelpOp implements IOp
 	
 	var ops:StringMap<IOp>;
 	var opNames:Array<String>;
+	var toolName:String;
+	var version:String;
 	
 	
-	public function new(opNames:Array<String>, ops:StringMap<IOp>) 
+	public function new(opNames:Array<String>, ops:StringMap<IOp>, toolName:String, version:String) 
 	{
 		this.opNames = opNames;
 		this.ops = ops;
+		this.toolName = toolName;
+		this.version = version;
 	}
 	
 	public function getArgInfo():Array<OpArg> {
@@ -38,9 +42,8 @@ class HelpOp implements IOp
 	{
 		var filterOp:String = cast args.get(ARG_OP);
 		
-		var version:String = Resource.getString("version");
 		PrintTools.help("-----------------------------------------");
-		PrintTools.help("Imagination Project Tools v" + version);
+		PrintTools.help(toolName + " v" + version);
 		PrintTools.help("-----------------------------------------");
 		
 		for (key in opNames) {
@@ -57,7 +60,7 @@ class HelpOp implements IOp
 					if (argInfo.hidden) continue;
 					
 					PrintTools.help(tabText(2, "- " + argInfo.name+(argInfo.assumed == true ? "*" : "") + ": " + argInfo.desc));
-					if (argInfo.def != null) {
+					if (argInfo.def != null && argInfo.prompt == null) {
 						if (argInfo.def == "") {
 							PrintTools.help(tabText(2, "( Optional )") );
 						}else{

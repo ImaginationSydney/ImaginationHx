@@ -10,15 +10,33 @@ import com.imagination.util.app.Platform;
 #if !html5
 class Files
 {
+	static var tempFile:File = new File();
+	
+	public static inline function slash():String 
+	{
+		if (Platform.isWindows()) {
+			return "\\";
+		}else {
+			return "/";
+		}
+	}
+	public static inline function ensure(path:String):String 
+	{
+		if (Platform.isWindows()) {
+			return path.split("/").join("\\");
+		}else {
+			return path;
+		}
+	}
 	
 	public static function documentsDir():String 
 	{
-		return File.documentsDirectory.nativePath + "/";
+		return File.documentsDirectory.nativePath + slash();
 	}
 	
 	public static function applicationDir():String 
 	{
-		return File.applicationDirectory.nativePath + "/";
+		return File.applicationDirectory.nativePath + slash();
 	}
 
 	public static function appDocsDir(?appId:String):String 
@@ -27,25 +45,20 @@ class Files
 		#if sys
 		
 		var path:String = Sys.executablePath();
-		var ind:Int;
-		if (_isWindows) {
-			ind = path.lastIndexOf("\\");
-		}else {
-			ind = path.lastIndexOf("/");
-		}
+		var ind = path.lastIndexOf(slash());
 		return path.substr(0, ind + 1);
 		
 		#elseif air3
 		
 		if (appId == null) appId = App.getAppId();
-		return documentsDir() + "imagination/" + appId + "/";
+		return documentsDir() + "imagination" + slash() + appId + slash();
 		
 		#end
 	}
 
 	public static function globalDocsDir():String 
 	{
-		return documentsDir() + "imagination/_global/";
+		return ensure(documentsDir() + "imagination/_global/");
 	}
 
 	public static function getTempFilePath():String 
@@ -70,9 +83,9 @@ class Files
 		return Sys.executablePath();
 		#elseif air3
 		if(Platform.isWindows()){
-			return File.applicationDirectory.nativePath + "//" + App.getAppFilename() + ".exe";
+			return File.applicationDirectory.nativePath + slash() + App.getAppFilename() + ".exe";
 		}else {
-			return File.applicationDirectory.nativePath + "//" + App.getAppFilename();
+			return File.applicationDirectory.nativePath + slash() + App.getAppFilename();
 		}
 		#end
 	}
@@ -82,6 +95,19 @@ class Files
 		#if air3
 		return File.userDirectory.nativePath;
 		#end
+	}
+	
+	public static function findInstalled(appPath:String) : String
+	{
+		if(Platform.isWindows()){
+			tempFile.nativePath = ("C:\\Program Files (x86)\\" + appPath);
+			if (!tempFile.exists) {
+				tempFile.nativePath = ("C:\\Program Files\\" + appPath);
+			}
+		}else{
+			tempFile.nativePath = ("/Applications/"+appPath);
+		}
+		return tempFile.nativePath;
 	}
 	
 }

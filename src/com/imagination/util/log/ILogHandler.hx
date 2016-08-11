@@ -7,5 +7,5 @@ import com.imagination.util.log.Log.LogLevel;
 
 interface ILogHandler 
 {
-	function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void;
+	function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void;
 }

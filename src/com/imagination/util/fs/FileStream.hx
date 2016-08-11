@@ -30,7 +30,8 @@ import com.imagination.util.fs.File;
 		public function writeUTFBytes(jsonStr:String):String
 		{
 			if (openFile == null) return null;
-			return cast Reflect.setProperty(openFile.sharedObject.data, "data", jsonStr);
+			Reflect.setProperty(openFile.sharedObject, "data", jsonStr);
+			return jsonStr;
 		}
 		
 		public function close() 

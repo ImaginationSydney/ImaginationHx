@@ -37,6 +37,10 @@ class Logger
 	{
 		Log.log(source, LogLevel.ERROR, getArgs(rest1, rest2, rest3, rest4, rest5, rest6, rest7, rest8), pos);
 	}
+	public static function criticalError(source:Dynamic, rest1:Dynamic, ?rest2:Dynamic, ?rest3:Dynamic, ?rest4:Dynamic, ?rest5:Dynamic, ?rest6:Dynamic, ?rest7:Dynamic, ?rest8:Dynamic, ?pos:PosInfos):Void
+	{
+		Log.log(source, LogLevel.CRITICAL_ERROR, getArgs(rest1, rest2, rest3, rest4, rest5, rest6, rest7, rest8), pos);
+	}
 	
 	@:inline
 	static private function getArgs(rest1:Dynamic, rest2:Dynamic, rest3:Dynamic, rest4:Dynamic, rest5:Dynamic, rest6:Dynamic, rest7:Dynamic, rest8:Dynamic) :Array<Dynamic>

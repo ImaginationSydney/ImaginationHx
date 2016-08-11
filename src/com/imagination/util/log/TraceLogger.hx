@@ -19,7 +19,7 @@ class TraceLogger implements ILogHandler
 		}
 	}
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void {
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void {
 		#if flash
 			// Avoids TextField overlay
 			flash.Lib.trace(formatter(source, level, rest, time));
@@ -35,10 +35,7 @@ class TraceLogger implements ILogHandler
 				case LogLevel.WARN:
 					js.Browser.window.console.warn(formatter(source, level, rest, time));
 					
-				case LogLevel.UNCAUGHT_ERROR:
-					js.Browser.window.console.error(formatter(source, level, rest, time));
-					
-				case LogLevel.ERROR:
+				case LogLevel.UNCAUGHT_ERROR | LogLevel.ERROR | LogLevel.CRITICAL_ERROR:
 					js.Browser.window.console.error(formatter(source, level, rest, time));
 			}
 		#else

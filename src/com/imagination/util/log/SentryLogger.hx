@@ -23,26 +23,24 @@ class SentryLogger implements ILogHandler
 		}
 	}
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void {
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void {
 		var msg:String = Std.string(source)+": "+rest.join(" ");
 		var levelCode:Int;
 		var attemptErr:Bool = false;
 		switch(level) {
 			case LogLevel.INFO:
 				levelCode = 10;
-				//Raven.captureMessage(msg);
-			case LogLevel.LOG:
-				levelCode = 20;
-				//Raven.captureMessage(msg);
 			case LogLevel.WARN:
 				levelCode = 30;
-				//Raven.captureMessage(msg);
-			case LogLevel.ERROR:
+			case LogLevel.ERROR | LogLevel.CRITICAL_ERROR:
 				levelCode = 40;
 				attemptErr = true;
 			case LogLevel.UNCAUGHT_ERROR:
 				levelCode = 50;
 				attemptErr = true;
+				
+			default: // | LogLevel.LOG
+				levelCode = 20;
 		}
 		var options:RavenCallData = { level:levelCode };
 		if (attemptErr && rest.length >= 3) {

@@ -67,7 +67,7 @@ class EchoLogger implements ILogHandler
 	}
 	
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void 
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void 
 	{
 		Sys.command(formatter(source, level, rest, time));
 	}

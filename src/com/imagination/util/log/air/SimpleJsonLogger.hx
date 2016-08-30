@@ -26,6 +26,7 @@ class SimpleJsonLogger implements ILogHandler
 	
 	private var dir:String;
 	private var fileExt:String;
+	private var writing:Map<String, Array<PendingWrite>> = new Map();
 	
 	//private var lastFileInd:Int = 0;
 	
@@ -73,25 +74,50 @@ class SimpleJsonLogger implements ILogHandler
 		var hash = Md5.encode(msg);
 		msg = jsonEscape(msg);
 		var ts = time.getTime();
-		var write = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg +  '",\n\t"timezoneOffset":' + timezoneOffset + '\n}<' + ts + ">";
+		msg = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg +  '",\n\t"timezoneOffset":' + timezoneOffset + '\n}';
 		
-		attemptWrite(write, hash, ts);
-	}
-	
-	function attemptWrite(write:String, hash:String, time:Float) 
-	{
-		var path = dir + "/" + hash + "." + fileExt;
-		if (FileTools.exists(path)){
-			workerSwitch.appendTextToFile(path, "<" + time + ">", null, onError.bind(_, write, hash, time));
+		var writeList = writing.get(hash);
+		if (writeList != null){
+			writeList.push({msg:msg, time:ts});
 		}else{
-			//lastFileInd++;
-			workerSwitch.writeTextToFile(path, write, null, onError.bind(_, write, hash, time));
+			writing.set(hash, []);
+			attemptWrite(msg, hash, [ts]);
 		}
 	}
 	
-	function onError(err:String, write:String, hash:String, time:Float) 
+	function attemptWrite(msg:String, hash:String, times:Array<Float>) 
 	{
-		attemptWrite(write, hash, time);
+		var path = dir + "/" + hash + "." + fileExt;
+		var timesStr:String = "";
+		for (time in times){
+			timesStr += "<" + time + ">";
+		}
+		if (FileTools.exists(path)){
+			workerSwitch.appendTextToFile(path, timesStr, onComplete.bind(_, hash), onError.bind(_, msg, hash, times));
+		}else{
+			var write = msg + timesStr;
+			workerSwitch.writeTextToFile(path, write, onComplete.bind(_, hash), onError.bind(_, msg, hash, times));
+		}
+	}
+	
+	function onError(err:String, msg:String, hash:String, times:Array<Float>) 
+	{
+		attemptWrite(msg, hash, times);
+	}
+	
+	function onComplete(success:Dynamic, hash:String) 
+	{
+		var writeList = writing.get(hash);
+		writing.remove(hash);
+		if (writeList.length > 0){
+			var path = dir + "/" + hash + "." + fileExt;
+			var times:Array<Float> = [];
+			var msg = writeList[0].msg;
+			for (pending in writeList){
+				times.push(pending.time);
+			}
+			attemptWrite(msg, hash, times);
+		}
 	}
 	
 	function jsonEscape(str  :String) : String  {
@@ -102,4 +128,9 @@ class SimpleJsonLogger implements ILogHandler
 		str = str.split('"').join('\\"');
 		return str;
 	}
+}
+
+typedef PendingWrite =
+{
+	msg:String, time:Float
 }

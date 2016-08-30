@@ -73,7 +73,7 @@ class SimpleJsonLogger implements ILogHandler
 		var hash = Md5.encode(msg);
 		msg = jsonEscape(msg);
 		var ts = time.getTime();
-		var write = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg +  ',\n\t"timezoneOffset":' + timezoneOffset + '\n}<' + ts + ">";
+		var write = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg +  '",\n\t"timezoneOffset":' + timezoneOffset + '\n}<' + ts + ">";
 		
 		attemptWrite(write, hash, ts);
 	}

@@ -15,6 +15,7 @@ import haxe.Timer;
 import haxe.crypto.Md5;
 
 using com.imagination.worker.ext.FileSysTasks;
+using Logger;
 
 /**
  * ...
@@ -108,6 +109,10 @@ class SimpleJsonLogger implements ILogHandler
 	function onComplete(success:Dynamic, hash:String) 
 	{
 		var writeList = writing.get(hash);
+		if (writeList == null) {
+			error("writeList = null");
+			return;
+		}
 		writing.remove(hash);
 		if (writeList.length > 0){
 			var path = dir + "/" + hash + "." + fileExt;

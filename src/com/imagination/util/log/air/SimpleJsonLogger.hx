@@ -15,6 +15,7 @@ import haxe.Timer;
 import haxe.crypto.Md5;
 
 using com.imagination.worker.ext.FileSysTasks;
+using Logger;
 
 /**
  * ...

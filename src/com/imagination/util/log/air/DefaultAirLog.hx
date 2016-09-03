@@ -40,6 +40,8 @@ class DefaultAirLog
 		
 		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.CRITICAL_ERROR]);
 		
+		Log.mapHandler(new MassErrorQuitLogger(), [LogLevel.UNCAUGHT_ERROR, LogLevel.CRITICAL_ERROR]);
+		
 		if(restartApp != null) Log.mapHandler(new MethodCallLogger(restartApp), [LogLevel.CRITICAL_ERROR]);
 		
 		root.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError.bind(_, restartApp));

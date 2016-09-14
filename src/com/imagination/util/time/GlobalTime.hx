@@ -58,7 +58,7 @@ class GlobalTime
 	static function get_today():Date 
 	{
 		var _now:Date = now();
-		var todayTime:Float = _now.getTime();
+		var todayTime:Float = _now.getTime() - (timezoneOffset * 60 * 1000);
 		todayTime = Math.floor(todayTime / 1000 / 60 / 60 / 24);
 		todayTime = todayTime * 1000 * 60 * 60 * 24;
 		var todayDate:Date = Date.fromTime(todayTime + (timezoneOffset * 60 * 1000));

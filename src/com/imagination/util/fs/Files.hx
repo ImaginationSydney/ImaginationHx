@@ -55,6 +55,14 @@ class Files
 		
 		#end
 	}
+	
+	#if air3
+	public static function resourcesDir(?appId:String):String 
+	{
+		if (appId == null) appId = App.getAppId();
+		return documentsDir() + "imagination" + slash() + appId + "+resources" + slash();
+	}
+	#end
 
 	public static function globalDocsDir():String 
 	{

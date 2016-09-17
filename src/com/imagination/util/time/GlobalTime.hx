@@ -8,7 +8,7 @@ class GlobalTime
 {
 	static public var today(get, null):Date;
 	
-	static public var offset:Float = 0;
+	@:isVar static public var offset(get, set):Float = 0;
 	static public var pause:Bool = false;
 	static private var _nowDate:Date;
 	static private var _nowTime:Null<Float>;
@@ -69,10 +69,19 @@ class GlobalTime
 	{
 		if (_timezoneOffset == null) {
 			var _now:Date = now();
-			trace("now = " + _now);
 			_timezoneOffset = Reflect.getProperty(_now, "timezoneOffset");
-			trace("timezoneOffset = " + _timezoneOffset);
 		}
 		return _timezoneOffset;
+	}
+	
+	static function get_offset():Float 
+	{
+		return offset;
+	}
+	
+	static function set_offset(value:Float):Float 
+	{
+		OnTick();
+		return offset = value;
 	}
 }

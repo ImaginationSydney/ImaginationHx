@@ -129,7 +129,7 @@ class AppExit
 	}
 	static private function onExit(e:Event) 
 	{
-		callExitCleanup(0);
+		callExitCleanup(0, 0);
 	}
 	#end
 	

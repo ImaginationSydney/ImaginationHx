@@ -78,7 +78,7 @@ import sys.FileSystem;
 		{
 			listenerTracker.removeAllEventListeners();
 			stream.close();
-			onFail(e.toString());
+			if(onFail != null) onFail(e.toString());
 		}
 		
 		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
@@ -159,6 +159,12 @@ import sys.FileSystem;
 		{
 			temp.nativePath = path;
 			temp.createDirectory();
+		}
+		
+		static public function isDirectory(path : String) 
+		{
+			temp.nativePath = path;
+			return temp.isDirectory;
 		}
 		
 		

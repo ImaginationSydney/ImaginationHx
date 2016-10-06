@@ -19,6 +19,8 @@ class DefaultAirLog
 	public static var criticalErrorCodes:Array<Int> = [
 					3691 // Resource limit exceeded
 					];
+					
+	private static var restartRequested:Bool;
 	
 	public static function install(root:DisplayObject, ?restartApp:Void->Void):Void
 	{
@@ -37,6 +39,8 @@ class DefaultAirLog
 		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
 		
 		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.CRITICAL_ERROR]);
+		
+		Log.mapHandler(new MassErrorQuitLogger(), [LogLevel.UNCAUGHT_ERROR, LogLevel.CRITICAL_ERROR]);
 		
 		if(restartApp != null) Log.mapHandler(new MethodCallLogger(restartApp), [LogLevel.CRITICAL_ERROR]);
 		
@@ -78,9 +82,10 @@ class DefaultAirLog
 		if (err != null) {
 			Log.log(e.target, LogLevel.UNCAUGHT_ERROR, [criticalErrorCodes.indexOf(err.errorID), "\n"+err.getStackTrace()]);
 			
-			if (restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
+			if (!restartRequested && restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
 				Logger.error(e.target, "Critical error "+err.errorID+" caught, attempting restart");
 				Delay.byFrames(1, restartApp);
+				restartRequested = true;
 			}
 		}else {
 			Logger.error(e.target, message);

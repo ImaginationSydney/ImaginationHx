@@ -12,10 +12,9 @@ import haxe.PosInfos;
  */
 class Log
 {
-	static public var ALL_LEVELS:Int = (LogLevel.INFO | LogLevel.LOG | LogLevel.WARN | LogLevel.ERROR | LogLevel.CRITICAL_ERROR | LogLevel.UNCAUGHT_ERROR);
-	static private var INDICES:Array<LogLevel> = [LogLevel.INFO , LogLevel.LOG , LogLevel.WARN , LogLevel.ERROR, LogLevel.CRITICAL_ERROR , LogLevel.UNCAUGHT_ERROR];
+	static public var ALL_LEVELS:Array<String> = [LogLevel.INFO, LogLevel.LOG, LogLevel.WARN, LogLevel.ERROR, LogLevel.CRITICAL_ERROR, LogLevel.UNCAUGHT_ERROR];
 	
-	private static var handlers:Array<Array<ILogHandler>>;
+	private static var handlers:Map<String, Array<ILogHandler>>;
 
 	/**
 	 * Set exclusiveSource to an object to ignore any log events from other objects.
@@ -26,14 +25,11 @@ class Log
 	{
 		if (handlers!=null) return;
 		
-		handlers = new Array<Array<ILogHandler>>();
-		for (i in 0 ...INDICES.length) {
-			handlers.push(new Array<ILogHandler>());
-		}
+		handlers = new Map();
 	}
 	
 	
-	public static function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, ?pos:PosInfos):Void {
+	public static function log(source:Dynamic, level:String, rest:Array<Dynamic>, ?pos:PosInfos):Void {
 		if (handlers==null) return;
 		
 		if (exclusiveSource != null && exclusiveSource != source) return;
@@ -48,46 +44,45 @@ class Log
 		var params:Array<Dynamic> = [source, level];
 		params = params.concat(rest);
 		
-		var ind:Int = INDICES.indexOf(level);
-		
 		#if macro
 			var time:Date = Date.now();
 		#else
 			var time:Date = GlobalTime.now();
 		#end
 		
-		var handlerList:Array<ILogHandler> = handlers[ind];
+		var handlerList:Array<ILogHandler> = handlers.get(level);
 		for(logger in handlerList) {
 			logger.log(source, level, rest, time);
 		}
 	}
 	
-	public static function mapHandler(handler:ILogHandler, levels:Int):Void {
+	public static function mapHandler(handler:ILogHandler, levels:Array<String>):Void {
 		setup();
-		mapHandlerToLevel(handler, levels, LogLevel.INFO, INDICES.indexOf(LogLevel.INFO));
-		mapHandlerToLevel(handler, levels, LogLevel.LOG, INDICES.indexOf(LogLevel.LOG));
-		mapHandlerToLevel(handler, levels, LogLevel.WARN, INDICES.indexOf(LogLevel.WARN));
-		mapHandlerToLevel(handler, levels, LogLevel.ERROR, INDICES.indexOf(LogLevel.ERROR));
-		mapHandlerToLevel(handler, levels, LogLevel.CRITICAL_ERROR, INDICES.indexOf(LogLevel.CRITICAL_ERROR));
-		mapHandlerToLevel(handler, levels, LogLevel.UNCAUGHT_ERROR, INDICES.indexOf(LogLevel.UNCAUGHT_ERROR));
+		
+		for(level in levels){
+			mapHandlerToLevel(handler, level);
+		}
 	}
 	
-	static private function mapHandlerToLevel(handler:ILogHandler, levels:Int, levelMatch:LogLevel, ind:Int):Void 
+	static private function mapHandlerToLevel(handler:ILogHandler, level:String):Void 
 	{
-		if (!untyped(levels & levelMatch)) return;
-		
-		var list:Array<ILogHandler> = handlers[ind];
-		list.push(handler);
+		var list:Array<ILogHandler> = handlers.get(level);
+		if (list == null){
+			list = [handler];
+			handlers.set(level, list);
+		}else{
+			list.push(handler);
+		}
 	}
 	
 }
 
 @:enum
-abstract LogLevel(Int) to Int {
-	var INFO = 1;
-	var LOG = 2;
-	var WARN = 4;
-	var ERROR = 8;
-	var CRITICAL_ERROR = 16;
-	var UNCAUGHT_ERROR = 32;
+abstract LogLevel(String) to String {
+	var INFO = "info";
+	var LOG = "log";
+	var WARN = "warn";
+	var ERROR = "error";
+	var CRITICAL_ERROR = "criticalError";
+	var UNCAUGHT_ERROR = "uncaughtError";
 }

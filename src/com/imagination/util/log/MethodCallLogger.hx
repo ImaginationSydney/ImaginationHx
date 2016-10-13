@@ -15,7 +15,7 @@ class MethodCallLogger implements ILogHandler
 		this.method = method;
 	}
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void
 	{
 		method();
 	}

@@ -22,7 +22,7 @@ class EchoLogger implements ILogHandler
 		#end
 	}
 	
-	static function defaultEchoFormatter(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date) 
+	static function defaultEchoFormatter(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date) 
 	{
 		var content = rest.join(" ");
 		var sourceStr = LogFormatImpl.padStr(LogFormatImpl.getType(source), 25);
@@ -36,10 +36,6 @@ class EchoLogger implements ILogHandler
 					textColor = LightGray;
 					bgColor = DarkGray;
 					
-				case LogLevel.LOG:
-					textColor = White;
-					bgColor = Black;
-					
 				case LogLevel.WARN:
 					textColor = LightYellow;
 					bgColor = Yellow;
@@ -50,6 +46,10 @@ class EchoLogger implements ILogHandler
 					
 				case LogLevel.UNCAUGHT_ERROR:
 					textColor = LightRed;
+					bgColor = Black;
+					
+				default: // | LogLevel.LOG:
+					textColor = White;
 					bgColor = Black;
 			}
 			return "echo \\033[" + textColor + ";" + bgColor + "m " + sourceStr + " \\033[0m " + msg + " | cmdcolor";
@@ -67,7 +67,7 @@ class EchoLogger implements ILogHandler
 	}
 	
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void 
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void 
 	{
 		Sys.command(formatter(source, level, rest, time));
 	}

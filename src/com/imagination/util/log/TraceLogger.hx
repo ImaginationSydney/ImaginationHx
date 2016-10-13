@@ -19,7 +19,7 @@ class TraceLogger implements ILogHandler
 		}
 	}
 	
-	public function log(source:Dynamic, level:LogLevel, rest:Array<Dynamic>, time:Date):Void {
+	public function log(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):Void {
 		#if flash
 			// Avoids TextField overlay
 			flash.Lib.trace(formatter(source, level, rest, time));

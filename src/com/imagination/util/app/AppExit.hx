@@ -22,8 +22,8 @@ import js.html.Event;
 @:allow(com.imagination.util.app.App)
 class AppExit
 {
-	static private var exitConfirmers:Array<ExitConfirmer>;
-	static private var exitCleanups:Array<ExitCleanup>;
+	static private var exitConfirmers:Array<ExitConfirmer> = [];
+	static private var exitCleanups:Array<ExitCleanup> = [];
 	static private var ignoreExit:Bool;
 	static private var callingExit:Bool;
 	static private var exitingErrorCode:Null<Int>;
@@ -142,6 +142,7 @@ class AppExit
 			callExitConfirmer(errorCode, 0);
 			return callingExit;
 		}else{
+			finaliseExit(errorCode);
 			return true;
 		}
 	}

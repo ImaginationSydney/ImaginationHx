@@ -35,6 +35,13 @@ class App
 		checkManifest();
 		return windows;
 	}
+	#elseif js
+	@:isVar static public var appElement(get, null):js.html.Element;
+	static function get_appElement():js.html.Element 
+	{
+		if (appElement == null) appElement = js.Browser.document.getElementById("openfl-content");
+		return appElement;
+	}
 	#end
 	
 	static private var isSetup:Bool;

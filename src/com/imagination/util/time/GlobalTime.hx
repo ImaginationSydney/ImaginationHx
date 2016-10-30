@@ -8,7 +8,7 @@ class GlobalTime
 {
 	static public var today(get, null):Date;
 	
-	static public var offset:Float = 0;
+	@:isVar static public var offset(get, set):Float = 0;
 	static public var pause:Bool = false;
 	static private var _nowDate:Date;
 	static private var _nowTime:Null<Float>;
@@ -19,8 +19,11 @@ class GlobalTime
 	
 	public function new() { }
 	
-	public static inline function __init__():Void
+	static public var inited:Bool = false;
+	public static function init():Void
 	{
+		if (inited) return;
+		inited = true;
 		EnterFrame.add(OnTick);
 	}	
 	
@@ -35,7 +38,7 @@ class GlobalTime
 	
 	public static function now():Date
 	{
-		//init();
+		init();
 		if (_nowDate == null) {
 			if (!pause || _nowTime == null) _nowTime = Date.now().getTime();
 			//_nowTimeWithOffset = _nowTime + timezoneOffset;
@@ -47,7 +50,7 @@ class GlobalTime
 	
 	public static function nowTime():Float
 	{
-		//init();
+		init();
 		if (!pause || _nowTime == null) {
 			_nowTime = Date.now().getTime();
 		}
@@ -69,10 +72,19 @@ class GlobalTime
 	{
 		if (_timezoneOffset == null) {
 			var _now:Date = now();
-			trace("now = " + _now);
 			_timezoneOffset = Reflect.getProperty(_now, "timezoneOffset");
-			trace("timezoneOffset = " + _timezoneOffset);
 		}
 		return _timezoneOffset;
+	}
+	
+	static function get_offset():Float 
+	{
+		return offset;
+	}
+	
+	static function set_offset(value:Float):Float 
+	{
+		OnTick();
+		return offset = value;
 	}
 }

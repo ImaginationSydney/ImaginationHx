@@ -42,7 +42,7 @@ import sys.FileSystem;
 				temp.copyTo(file, true);
 			}
 			else {
-				trace("failed to save content to: " + path);
+				//trace("failed to save content to: " + path);
 			}
 		}
 		
@@ -93,7 +93,7 @@ import sys.FileSystem;
 						if (onComplete != null) onComplete();
 					}
 					else {
-						trace("failed to save content to: " + path);
+						//trace("failed to save content to: " + path);
 						if (onFail != null) {
 							onFail("failed to save content to: " + path);
 						}
@@ -159,6 +159,12 @@ import sys.FileSystem;
 		{
 			temp.nativePath = path;
 			temp.createDirectory();
+		}
+		
+		static public function isDirectory(path : String) 
+		{
+			temp.nativePath = path;
+			return temp.isDirectory;
 		}
 		
 		

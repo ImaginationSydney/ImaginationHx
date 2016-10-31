@@ -57,10 +57,28 @@ class Files
 	}
 	
 	#if air3
+	static var reourcePath:String;
 	public static function resourcesDir(?appId:String):String 
 	{
+		if (reourcePath != null) return reourcePath;
 		if (appId == null) appId = App.getAppId();
-		return documentsDir() + "imagination" + slash() + appId + "+resources" + slash();
+		reourcePath = documentsDir() + "imagination" + slash() + appId + "+resources" + slash();
+		return reourcePath;
+	}
+	public static function resourcesUri(resource:String):String 
+	{
+		return resourcesDir() + resource;
+	}
+	#elseif html5
+	static var resourceLocation:String
+	public static function setResourceLocation(uri:String):Void 
+	{
+		if (uri.charAt(uri.length - 1) != "/") uri += "/";
+		resourceLocation = uri;
+	}
+	public static function resourcesUri(resource:String):String 
+	{
+		return resourceLocation + resource;
 	}
 	#end
 

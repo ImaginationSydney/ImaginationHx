@@ -67,7 +67,7 @@ class EnterFrame
 	private static var _lastT:Int;
 	private static var _delayPool:Array<DelayTracker>;
 	
-	#if (flash || openfl)
+	#if flash
 	static var _exit:Signal0;
 	static public var exit(get, null):Signal0;
 	static function get_exit():Signal0 {

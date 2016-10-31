@@ -56,7 +56,6 @@ class Files
 		#end
 	}
 	
-	#if air3
 	static var reourcePath:String;
 	public static function resourcesDir(?appId:String):String 
 	{
@@ -69,18 +68,6 @@ class Files
 	{
 		return resourcesDir() + resource;
 	}
-	#elseif html5
-	static var resourceLocation:String
-	public static function setResourceLocation(uri:String):Void 
-	{
-		if (uri.charAt(uri.length - 1) != "/") uri += "/";
-		resourceLocation = uri;
-	}
-	public static function resourcesUri(resource:String):String 
-	{
-		return resourceLocation + resource;
-	}
-	#end
 
 	public static function globalDocsDir():String 
 	{
@@ -136,5 +123,19 @@ class Files
 		return tempFile.nativePath;
 	}
 	
+}
+#else
+class Files
+{
+	static var resourceLocation:String;
+	public static function setResourceLocation(uri:String):Void 
+	{
+		if (uri.charAt(uri.length - 1) != "/") uri += "/";
+		resourceLocation = uri;
+	}
+	public static function resourcesUri(resource:String):String 
+	{
+		return resourceLocation + resource;
+	}
 }
 #end

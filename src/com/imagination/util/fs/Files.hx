@@ -64,7 +64,7 @@ class Files
 		reourcePath = documentsDir() + "imagination" + slash() + appId + "+resources" + slash();
 		return reourcePath;
 	}
-	public static function resourcesUri(resource:String):String 
+	public static function resourceUri(resource:String):String 
 	{
 		return resourcesDir() + resource;
 	}
@@ -133,7 +133,7 @@ class Files
 		if (uri.charAt(uri.length - 1) != "/") uri += "/";
 		resourceLocation = uri;
 	}
-	public static function resourcesUri(resource:String):String 
+	public static function resourceUri(resource:String):String 
 	{
 		return resourceLocation + resource;
 	}

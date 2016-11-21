@@ -56,13 +56,19 @@ class Files
 		#end
 	}
 	
-	static var reourcePath:String;
+	static var resourcePath:String;
+	static var resourcePathSuffix:String;
+	public static function setResourceSuffix(value:String):Void 
+	{
+		resourcePathSuffix = value;
+		resourcePath = null;
+	}
 	public static function resourcesDir(?appId:String):String 
 	{
-		if (reourcePath != null) return reourcePath;
+		if (resourcePath != null) return resourcePath;
 		if (appId == null) appId = App.getAppId();
-		reourcePath = documentsDir() + "imagination" + slash() + appId + "+resources" + slash();
-		return reourcePath;
+		resourcePath = documentsDir() + "imagination" + slash() + appId + (resourcePathSuffix==null ? "" : resourcePathSuffix) + "+resources" + slash();
+		return resourcePath;
 	}
 	public static function resourceUri(resource:String):String 
 	{

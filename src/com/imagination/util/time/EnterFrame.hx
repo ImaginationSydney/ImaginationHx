@@ -67,6 +67,19 @@ class EnterFrame
 	private static var _lastT:Int;
 	private static var _delayPool:Array<DelayTracker>;
 	
+	#if flash
+	static var _exit:Signal0;
+	static public var exit(get, null):Signal0;
+	static function get_exit():Signal0 {
+		if (_exit == null){
+			setupListener();
+			shape.addEventListener(flash.events.Event.EXIT_FRAME, function(e:flash.events.Event) { _exit.dispatch(); } );
+			_exit = new Signal0();
+		}
+		return _exit;
+	}
+	#end
+	
 	#if (flash || openfl)
 	private static var shape:Shape;
 	#end

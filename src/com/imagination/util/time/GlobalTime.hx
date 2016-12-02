@@ -19,8 +19,11 @@ class GlobalTime
 	
 	public function new() { }
 	
-	public static inline function __init__():Void
+	static public var inited:Bool = false;
+	public static function init():Void
 	{
+		if (inited) return;
+		inited = true;
 		EnterFrame.add(OnTick);
 	}	
 	
@@ -35,7 +38,7 @@ class GlobalTime
 	
 	public static function now():Date
 	{
-		//init();
+		init();
 		if (_nowDate == null) {
 			if (!pause || _nowTime == null) _nowTime = Date.now().getTime();
 			//_nowTimeWithOffset = _nowTime + timezoneOffset;
@@ -47,7 +50,7 @@ class GlobalTime
 	
 	public static function nowTime():Float
 	{
-		//init();
+		init();
 		if (!pause || _nowTime == null) {
 			_nowTime = Date.now().getTime();
 		}

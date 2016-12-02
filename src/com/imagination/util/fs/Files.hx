@@ -55,6 +55,19 @@ class Files
 		
 		#end
 	}
+	
+	static var reourcePath:String;
+	public static function resourcesDir(?appId:String):String 
+	{
+		if (reourcePath != null) return reourcePath;
+		if (appId == null) appId = App.getAppId();
+		reourcePath = documentsDir() + "imagination" + slash() + appId + "+resources" + slash();
+		return reourcePath;
+	}
+	public static function resourcesUri(resource:String):String 
+	{
+		return resourcesDir() + resource;
+	}
 
 	public static function globalDocsDir():String 
 	{
@@ -110,5 +123,19 @@ class Files
 		return tempFile.nativePath;
 	}
 	
+}
+#else
+class Files
+{
+	static var resourceLocation:String;
+	public static function setResourceLocation(uri:String):Void 
+	{
+		if (uri.charAt(uri.length - 1) != "/") uri += "/";
+		resourceLocation = uri;
+	}
+	public static function resourcesUri(resource:String):String 
+	{
+		return resourceLocation + resource;
+	}
 }
 #end

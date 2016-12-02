@@ -155,6 +155,13 @@ import sys.FileSystem;
 			temp.deleteDirectory(deleteDirectoryContents);
 		}
 		
+		static public function deleteDirectoryAsync(path : String, deleteDirectoryContents:Bool = false) :Void
+		{
+			if (!exists(path)) return;
+			temp.nativePath = path;
+			temp.deleteDirectoryAsync(deleteDirectoryContents);
+		}
+		
 		static public function createDirectory(path : String) :Void
 		{
 			temp.nativePath = path;

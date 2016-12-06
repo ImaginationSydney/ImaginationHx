@@ -1,5 +1,6 @@
 package com.imagination.util.fs;
 import com.imagination.air.util.EventListenerTracker;
+import openfl.utils.ByteArray;
 
 #if sys
 import sys.FileSystem;
@@ -118,6 +119,25 @@ import sys.FileSystem;
 				if (onFail != null) onFail(Std.string(e));
 			}
 		}
+		
+		public static function saveBinaryAsync(path:String, binary:ByteArray, ?onComplete:Void->Void, ?onFail:String->Void):Void
+		{
+			try{
+				temp.nativePath = path;
+				confirmParent(temp);
+				var stream:FileStream =  new FileStream();
+				var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+				listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
+				listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
+				stream.openAsync(temp, FileMode.WRITE);
+				binary.position = 0;
+				stream.writeBytes(binary);
+				stream.close();
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(Std.string(e));
+			}
+		}
+		
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();

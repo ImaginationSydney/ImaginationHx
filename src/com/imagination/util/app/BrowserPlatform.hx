@@ -104,6 +104,11 @@ class BrowserPlatform
 	}
 	
 	
+	public static function isMobile():Bool 
+	{
+		init();
+		return _isAndroid || _isIOS;
+	}
 	public static function isIOS():Bool 
 	{
 		init();

@@ -60,4 +60,9 @@ class DesktopPlatform
 		init();
 		return _is64Bit;
 	}
+	
+	public static function isMobile():Bool 
+	{
+		return false;
+	}
 }

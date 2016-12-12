@@ -21,4 +21,9 @@ class Platform
 	{
 		return RealPlatform.isMac();
 	}
+	
+	public static function isMobile():Bool 
+	{
+		return RealPlatform.isMobile();
+	}
 }

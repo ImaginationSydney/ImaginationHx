@@ -174,6 +174,12 @@ import sys.FileSystem;
 			return temp.isDirectory;
 		}
 		
+		static public function platformPathToUri(path:String) : String
+		{
+			temp.nativePath = path;
+			return temp.url;
+		}
+		
 		
 		
 		

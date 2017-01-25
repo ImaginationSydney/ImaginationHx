@@ -131,7 +131,12 @@ import sys.FileSystem;
 		
 		static public function exists(path:String) : Bool
 		{
-			temp.nativePath = path;
+			try{
+				temp.nativePath = path;
+			}
+			catch (e:Dynamic) {
+				return false;
+			}
 			return temp.exists;
 		}
 		

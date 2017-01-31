@@ -1,8 +1,9 @@
 package com.imagination.util.fs;
-import com.imagination.air.util.EventListenerTracker;
 
 #if sys
 import sys.FileSystem;
+#else
+import com.imagination.air.util.EventListenerTracker;
 #end
 
 /**
@@ -199,21 +200,29 @@ import sys.FileSystem;
 	
 #elseif sys
 
-	@:forward()
 	abstract FileTools(sys.io.File) to sys.io.File
 	{
 
+		public inline static function getContent(path:String):String
+		{
+			return sys.io.File.getContent(path);
+		}
 		public static function getContentAsync(path:String, onComplete:String->Void):Void
 		{
-			onComplete(sys.io.File.getContent(path);
+			onComplete(sys.io.File.getContent(path));
 		}
-		public static function saveContentAsync(path:String, content:String, onComplete:String->Void):Void
+		public inline static function saveContent(path:String, content:String):Void
 		{
-			onComplete(sys.io.File.saveContent(path, content);
+			return sys.io.File.saveContent(path, content);
+		}
+		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void):Void
+		{
+			sys.io.File.saveContent(path, content);
+			onComplete();
 		}
 		inline public static function exists(path:String):Bool
 		{
-			FileSystem.exists(path);
+			return FileSystem.exists(path);
 		}
 		inline public static function rename(path : String, newPath : String):Void
 		{
@@ -222,6 +231,19 @@ import sys.FileSystem;
 		inline public static function deleteFile(path : String):Void
 		{
 			FileSystem.deleteFile(path);
+		}
+		
+		inline public static function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void
+		{
+			if (!deleteDirectoryContents && FileSystem.readDirectory(path).length > 0){
+				throw "Couldn't delete folder, contains items";
+			}
+			FileSystem.deleteDirectory(path);
+		}
+		
+		inline public static function createDirectory(path : String) :Void
+		{
+			FileSystem.createDirectory(path);
 		}
 		
 	}

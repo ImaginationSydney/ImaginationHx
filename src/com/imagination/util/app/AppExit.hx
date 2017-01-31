@@ -138,8 +138,10 @@ class AppExit
 		if (ignoreExit) return false;
 		if (exitConfirmers.length > 0 || exitCleanups.length > 0) {
 			callingExit = true;
-			preventDefault();
 			callExitConfirmer(errorCode, 0);
+			if (callingExit){
+				preventDefault();
+			}
 			return callingExit;
 		}else{
 			finaliseExit(errorCode);
@@ -158,7 +160,7 @@ class AppExit
 				}
 				callExitCleanup(errorCode, 0);
 			#else
-				// NativeApplication not supported
+				callingExit = false;
 			#end
 		}else {
 			var exitConfirmer:ExitConfirmer = exitConfirmers[ind];

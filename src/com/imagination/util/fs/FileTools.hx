@@ -1,4 +1,6 @@
 package com.imagination.util.fs;
+import haxe.io.Bytes;
+import haxe.io.BytesData;
 
 #if sys
 import sys.FileSystem;
@@ -22,6 +24,17 @@ import com.imagination.air.util.EventListenerTracker;
 	{
 		static var temp:FlFile = new FlFile();
 
+		
+		static public function getBytes(path:String) : Bytes
+		{
+			temp.nativePath = path;
+			var stream:FileStream =  new FileStream();
+			stream.open(temp, FileMode.READ);
+			var ret = new BytesData();
+			stream.readBytes(ret);
+			stream.close();
+			return Bytes.ofData(ret);
+		}
 		public static function getContent(path:String):String
 		{
 			temp.nativePath = path;
@@ -185,6 +198,7 @@ import com.imagination.air.util.EventListenerTracker;
 			temp.nativePath = path;
 			return temp.url;
 		}
+		
 		
 		
 		

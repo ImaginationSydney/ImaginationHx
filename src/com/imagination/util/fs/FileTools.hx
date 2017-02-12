@@ -95,12 +95,22 @@ import com.imagination.air.util.EventListenerTracker;
 			if(onFail != null) onFail(e.toString());
 		}
 		
-		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
+		public static function saveContentAsyncWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
+			if (confirm == null){
+				confirm = function(str1:String, str2:String) : Bool {
+					return str1 == str2;
+				}
+			}
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {
 				FileTools.getContentAsync(temp, function (savedContent:String) {
-					if (confirm(content, savedContent)) {
+					var pass = false;
+					try{
+						pass = confirm(content, savedContent);
+					}catch (e:Dynamic){}
+					
+					if (pass) {
 						var file:File = new File(path);
 						var temp:File = new File(temp);
 						temp.copyToAsync(file, true);

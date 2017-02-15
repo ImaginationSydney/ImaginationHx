@@ -153,6 +153,17 @@ import com.imagination.air.util.EventListenerTracker;
 			if(onFail != null) onFail(e.toString());
 		}
 		
+		
+		static public function findExistingPath(paths:Array<String>) : Null<String>
+		{
+			for (path in paths){
+				if (FileTools.exists(path)){
+					return path;
+				}
+			}
+			return null;
+		}
+			
 		static public function exists(path:String) : Bool
 		{
 			try{

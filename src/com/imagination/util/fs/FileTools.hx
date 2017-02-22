@@ -1,9 +1,12 @@
 package com.imagination.util.fs;
-import com.imagination.air.util.EventListenerTracker;
+import haxe.io.Bytes;
+import haxe.io.BytesData;
 import openfl.utils.ByteArray;
 
 #if sys
 import sys.FileSystem;
+#else
+import com.imagination.air.util.EventListenerTracker;
 #end
 
 /**
@@ -22,6 +25,17 @@ import sys.FileSystem;
 	{
 		static var temp:FlFile = new FlFile();
 
+		
+		static public function getBytes(path:String) : Bytes
+		{
+			temp.nativePath = path;
+			var stream:FileStream =  new FileStream();
+			stream.open(temp, FileMode.READ);
+			var ret = new BytesData();
+			stream.readBytes(ret);
+			stream.close();
+			return Bytes.ofData(ret);
+		}
 		public static function getContent(path:String):String
 		{
 			temp.nativePath = path;
@@ -82,12 +96,22 @@ import sys.FileSystem;
 			if(onFail != null) onFail(e.toString());
 		}
 		
-		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
+		public static function saveContentAsyncWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
+			if (confirm == null){
+				confirm = function(str1:String, str2:String) : Bool {
+					return str1 == str2;
+				}
+			}
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {
 				FileTools.getContentAsync(temp, function (savedContent:String) {
-					if (confirm(content, savedContent)) {
+					var pass = false;
+					try{
+						pass = confirm(content, savedContent);
+					}catch (e:Dynamic){}
+					
+					if (pass) {
 						var file:File = new File(path);
 						var temp:File = new File(temp);
 						temp.copyToAsync(file, true);
@@ -149,9 +173,25 @@ import sys.FileSystem;
 			if(onFail != null) onFail(e.toString());
 		}
 		
+		
+		static public function findExistingPath(paths:Array<String>) : Null<String>
+		{
+			for (path in paths){
+				if (FileTools.exists(path)){
+					return path;
+				}
+			}
+			return null;
+		}
+			
 		static public function exists(path:String) : Bool
 		{
-			temp.nativePath = path;
+			try{
+				temp.nativePath = path;
+			}
+			catch (e:Dynamic) {
+				return false;
+			}
 			return temp.exists;
 		}
 		
@@ -175,6 +215,13 @@ import sys.FileSystem;
 			temp.deleteDirectory(deleteDirectoryContents);
 		}
 		
+		static public function deleteDirectoryAsync(path : String, deleteDirectoryContents:Bool = false) :Void
+		{
+			if (!exists(path)) return;
+			temp.nativePath = path;
+			temp.deleteDirectoryAsync(deleteDirectoryContents);
+		}
+		
 		static public function createDirectory(path : String) :Void
 		{
 			temp.nativePath = path;
@@ -186,6 +233,13 @@ import sys.FileSystem;
 			temp.nativePath = path;
 			return temp.isDirectory;
 		}
+		
+		static public function platformPathToUri(path:String) : String
+		{
+			temp.nativePath = path;
+			return temp.url;
+		}
+		
 		
 		
 		
@@ -201,21 +255,29 @@ import sys.FileSystem;
 	
 #elseif sys
 
-	@:forward()
 	abstract FileTools(sys.io.File) to sys.io.File
 	{
 
+		public inline static function getContent(path:String):String
+		{
+			return sys.io.File.getContent(path);
+		}
 		public static function getContentAsync(path:String, onComplete:String->Void):Void
 		{
-			onComplete(sys.io.File.getContent(path);
+			onComplete(sys.io.File.getContent(path));
 		}
-		public static function saveContentAsync(path:String, content:String, onComplete:String->Void):Void
+		public inline static function saveContent(path:String, content:String):Void
 		{
-			onComplete(sys.io.File.saveContent(path, content);
+			return sys.io.File.saveContent(path, content);
+		}
+		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void):Void
+		{
+			sys.io.File.saveContent(path, content);
+			onComplete();
 		}
 		inline public static function exists(path:String):Bool
 		{
-			FileSystem.exists(path);
+			return FileSystem.exists(path);
 		}
 		inline public static function rename(path : String, newPath : String):Void
 		{
@@ -224,6 +286,19 @@ import sys.FileSystem;
 		inline public static function deleteFile(path : String):Void
 		{
 			FileSystem.deleteFile(path);
+		}
+		
+		inline public static function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void
+		{
+			if (!deleteDirectoryContents && FileSystem.readDirectory(path).length > 0){
+				throw "Couldn't delete folder, contains items";
+			}
+			FileSystem.deleteDirectory(path);
+		}
+		
+		inline public static function createDirectory(path : String) :Void
+		{
+			FileSystem.createDirectory(path);
 		}
 		
 	}

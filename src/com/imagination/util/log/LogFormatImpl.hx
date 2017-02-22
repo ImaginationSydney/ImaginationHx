@@ -67,7 +67,7 @@ class LogFormatImpl
 		var msg:String = '<div style="color:#fff;background:#'+color+';min-width: 350px;display:inline-block;">'+timestamp+" "+getType(source)+"</div> " + content;
 		msg = msg.split("\n").join("<br/>");
 		msg = msg.split("\t").join("&nbsp;&nbsp;&nbsp;&nbsp;");
-		return "<div><code style='font-size:12px;color:#"+color+"'>" + msg + "</code></div>";
+		return "<div><code style='font-size:12px;white-space:pre;color:#"+color+"'>" + msg + "</code></div>";
 	}
 	
 	public static function flashHtmlFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String

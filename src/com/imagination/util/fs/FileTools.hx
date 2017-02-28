@@ -201,11 +201,17 @@ import com.imagination.air.util.EventListenerTracker;
 			temp.moveTo(new FlFile(newPath));
 			return temp.exists;
 		}
-		inline public static function deleteFile(path : String):Void
+		inline public static function deleteFile(path : String) : Bool
 		{
-			if (!exists(path)) return;
-			temp.nativePath = path;
-			temp.deleteFile();
+			if (!exists(path)) return true;
+			try{
+				temp.nativePath = path;
+				temp.deleteFile();
+				return true;
+			}catch (e:Dynamic){
+				// failed to delete
+				return false;
+			}
 		}
 		
 		static public function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void

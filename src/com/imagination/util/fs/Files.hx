@@ -1,6 +1,7 @@
 package com.imagination.util.fs;
 import com.imagination.util.app.App;
 import com.imagination.util.app.Platform;
+import openfl.display.BitmapData;
 
 /**
  * ...
@@ -121,6 +122,21 @@ class Files
 			tempFile.nativePath = ("/Applications/"+appPath);
 		}
 		return tempFile.nativePath;
+	}
+	
+	static public function getFileName(path:String) : String
+	{
+		return path.substr(path.lastIndexOf(slash()) + 1);
+	}
+	
+	static public function getIcon(value:String) : Null<BitmapData>
+	{
+		#if air
+		var file = new File(value);
+		return file.icon == null ? null : file.icon.bitmaps[0];
+		#else
+		return null;
+		#end
 	}
 	
 }

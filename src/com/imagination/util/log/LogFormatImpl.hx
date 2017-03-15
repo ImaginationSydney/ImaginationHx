@@ -7,6 +7,7 @@ import com.imagination.util.log.Log.LogLevel;
  */
 class LogFormatImpl
 {
+	static private var padList:Array<String> = [];
 
 	
 	public static function cleanFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
@@ -107,8 +108,20 @@ class LogFormatImpl
 	}
 	static private function padStr(str:String, length:Int):String 
 	{
-		while (str.length < length) str += " ";
-		return str;
+		// This is optimised because string appending loop triggers garbage collection, better to cache the amount of spaces needed.
+		var short = length - str.length;
+		if (short <= 0) return str;
+		
+		short--;
+		if (padList[short] == null){
+			var pad:String = " ";
+			while (short > 0){
+				pad = pad + " ";
+				short--;
+			}
+			padList[pad.length] = pad;
+		}
+		return str + padList[short];
 	}
 	
 	public static function fdFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String

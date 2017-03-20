@@ -1,6 +1,7 @@
 package com.imagination.util.fs;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
+import openfl.utils.ByteArray;
 
 #if sys
 import sys.FileSystem;
@@ -142,6 +143,25 @@ import com.imagination.air.util.EventListenerTracker;
 				if (onFail != null) onFail(Std.string(e));
 			}
 		}
+		
+		public static function saveBinaryAsync(path:String, binary:ByteArray, ?onComplete:Void->Void, ?onFail:String->Void):Void
+		{
+			try{
+				temp.nativePath = path;
+				confirmParent(temp);
+				var stream:FileStream =  new FileStream();
+				var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+				listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
+				listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
+				stream.openAsync(temp, FileMode.WRITE);
+				binary.position = 0;
+				stream.writeBytes(binary);
+				stream.close();
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(Std.string(e));
+			}
+		}
+		
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
@@ -181,11 +201,17 @@ import com.imagination.air.util.EventListenerTracker;
 			temp.moveTo(new FlFile(newPath));
 			return temp.exists;
 		}
-		inline public static function deleteFile(path : String):Void
+		inline public static function deleteFile(path : String) : Bool
 		{
-			if (!exists(path)) return;
-			temp.nativePath = path;
-			temp.deleteFile();
+			if (!exists(path)) return true;
+			try{
+				temp.nativePath = path;
+				temp.deleteFile();
+				return true;
+			}catch (e:Dynamic){
+				// failed to delete
+				return false;
+			}
 		}
 		
 		static public function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void

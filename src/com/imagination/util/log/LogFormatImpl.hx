@@ -115,11 +115,12 @@ class LogFormatImpl
 		short--;
 		if (padList[short] == null){
 			var pad:String = " ";
-			while (short > 0){
+			var count = short;
+			while (count > 0){
 				pad = pad + " ";
-				short--;
+				count--;
 			}
-			padList[pad.length] = pad;
+			padList[short] = pad;
 		}
 		return str + padList[short];
 	}

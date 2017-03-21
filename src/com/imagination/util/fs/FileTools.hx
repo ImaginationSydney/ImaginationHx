@@ -144,6 +144,22 @@ import com.imagination.air.util.EventListenerTracker;
 			}
 		}
 		
+		public static function saveBinary(path:String, binary:ByteArray):Bool
+		{
+			try{
+				temp.nativePath = path;
+				confirmParent(temp);
+				var stream:FileStream =  new FileStream();
+				stream.open(temp, FileMode.WRITE);
+				binary.position = 0;
+				stream.writeBytes(binary);
+				stream.close();
+				return true;
+			}catch (e:Dynamic){
+				return false;
+			}
+		}
+		
 		public static function saveBinaryAsync(path:String, binary:ByteArray, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
 			try{

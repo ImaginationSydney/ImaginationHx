@@ -80,7 +80,7 @@ class HtmlFileLogger implements ILogHandler
 		while (targetFile==null || targetFile.exists) {
 			lastFile = targetFile;
 			var fileName:String = toDateString(now) + (targetFileCount>0 ? "_"+pad(targetFileCount, 2) : "") + "." + fileExt;
-			targetFile = new File(dir + "\\" + fileName);
+			targetFile = new File(dir + fileName);
 			targetFileDate = now.getDate();
 			targetFileCount++;
 		}

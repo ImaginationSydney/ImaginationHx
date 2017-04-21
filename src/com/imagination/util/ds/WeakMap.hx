@@ -63,13 +63,7 @@ class WeakMap<K: { },V> implements haxe.Constraints.IMap<K,V>
 		See `Map.iterator`
 	**/
 	public function iterator():Iterator<V> {
-		var values:Array<V> = [];
-		untyped{
-			for (i in innerMap){
-				values.push(innerMap[i]);
-			}
-		}
-		return values.iterator();
+		throw "Javascript WeakMap does not support enumeration";
 	}
 
 	/**

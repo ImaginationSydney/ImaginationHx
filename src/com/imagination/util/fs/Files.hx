@@ -143,6 +143,23 @@ class Files
 #else
 class Files
 {
+	public static inline function slash():String 
+	{
+		if (Platform.isWindows()) {
+			return "\\";
+		}else {
+			return "/";
+		}
+	}
+	public static inline function ensure(path:String):String 
+	{
+		if (Platform.isWindows()) {
+			return path.split("/").join("\\");
+		}else {
+			return path;
+		}
+	}
+	
 	static var resourceLocation:String;
 	public static function setResourceLocation(uri:String):Void 
 	{
@@ -152,6 +169,11 @@ class Files
 	public static function resourcesUri(resource:String):String 
 	{
 		return resourceLocation + resource;
+	}
+	
+	static public function getFileName(path:String) : String
+	{
+		return path.substr(path.lastIndexOf(slash()) + 1);
 	}
 }
 #end

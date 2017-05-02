@@ -23,7 +23,7 @@ abstract AppWindows(NativeAppWindows) from NativeAppWindows
 	public var onAdded(get, never):Signal1<NativeAppWindow>;
 	public var onRemoved(get, never):Signal1<NativeAppWindow>;
 
-	public var list(get, never):Array<AppWindow>;
+	@public public var list(get, never):Array<AppWindow>;
 
 	public function new()
 	{
@@ -37,7 +37,7 @@ abstract AppWindows(NativeAppWindows) from NativeAppWindows
 
 	public function create():AppWindow
 	{
-		return this.create();
+		return this.doCreate();
 	}
 
 	public function foreach (onAdd:AppWindow->Void, onRemove:AppWindow->Void):Void

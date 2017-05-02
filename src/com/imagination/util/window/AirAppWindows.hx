@@ -1,9 +1,11 @@
 package com.imagination.util.window;
 import com.imagination.core.type.Notifier;
+import com.imagination.util.app.App;
 import com.imagination.util.signals.Signal.Signal1;
 import com.imagination.util.signals.Signal.Signal2;
 import flash.desktop.NativeApplication;
 import flash.display.NativeWindow;
+import flash.display.NativeWindowInitOptions;
 import flash.display.NativeWindowSystemChrome;
 import flash.events.NativeWindowDisplayStateEvent;
 import flash.display.NativeWindowDisplayState;
@@ -24,13 +26,10 @@ class AirAppWindows
 	public var onAdded = new Signal1<AirAppWindow>();
 	public var onRemoved = new Signal1<AirAppWindow>();
 	
-	//private var _initialWindow:InitialWindow;
-	//@:isVar public var initialWindow(default, null):InitialWindow;
+	@:isVar public var list(default, null) : Array<AirAppWindow> = [];
 	
 	var app:NativeApplication;
 	var autoExit:Bool;
-	//var windowToError:Map<NativeWindow, Int> = new Map();
-	var _list:Array<AirAppWindow> = [];
 
 	public function new() 
 	{
@@ -46,57 +45,27 @@ class AirAppWindows
 	 * Must manually call this method when a new window is opened.
 	 * There is no event fired when a new window is opened.
 	 */
-	public function windowAdded(nativeWindow:NativeWindow) 
+	public function windowAdded(nativeWindow:NativeWindow) : AirAppWindow
 	{
 		var window = new AirAppWindow(nativeWindow);
-		_list.push(window);
+		list.push(window);
 		onAdded.dispatch(window);
 		
 		window.closing.add(onWindowClose);
+		return window;
 	}
 	
 	private function onWindowClose(from:AirAppWindow, cancel:Void->Void):Void 
 	{
-		var nativeWindow:NativeWindow = untyped e.currentTarget;
 		if (autoExit && app.openedWindows.length == 0){
-			//var exitCode = (windowToError.exists(window) ? windowToError.get(window) : 1);
 			var exitCode = from.pendingError;
 			from.pendingError = 0;
 			App.exit(exitCode);
 		}
 		
-		_list.remove(from);
+		list.remove(from);
 		onRemoved.dispatch(from);
 	}
-	
-	
-	/*private function checkManifest(appXml:Xml) 
-	{
-		initialWindow = {};
-		#if flash
-		for (child in appXml.elements()) 
-		{
-			for (child2 in child.elements()) 
-			{
-				if (child2.nodeName == "initialWindow") {
-					for (child3 in child2.elements()) 
-					{
-						if (child3.nodeName == "content") initialWindow.content = child3.firstChild().nodeValue;
-						if (child3.nodeName == "depthAndStencil") initialWindow.depthAndStencil = child3.firstChild().nodeValue == "true";
-						if (child3.nodeName == "maximizable") initialWindow.maximizable = child3.firstChild().nodeValue == "true";
-						if (child3.nodeName == "minimizable") initialWindow.minimizable = child3.firstChild().nodeValue == "true";
-						if (child3.nodeName == "renderMode") initialWindow.renderMode = child3.firstChild().nodeValue;
-						if (child3.nodeName == "resizable") initialWindow.resizable = child3.firstChild().nodeValue == "true";
-						if (child3.nodeName == "systemChrome") initialWindow.systemChrome = child3.firstChild().nodeValue;
-						if (child3.nodeName == "title") initialWindow.title = child3.firstChild().nodeValue;
-						if (child3.nodeName == "transparent") initialWindow.transparent = child3.firstChild().nodeValue == "true";
-						if (child3.nodeName == "visible") initialWindow.visible = child3.firstChild().nodeValue == "true";
-					}
-				}	
-			}
-		}
-		#end
-	}*/
 	
 	function get_hideSupported():Bool 
 	{
@@ -108,42 +77,35 @@ class AirAppWindows
 		return true;
 	}
 	
-	public function create():NativeWindow{
-		var window = new NativeWindow();
-		windowAdded(window);
-		return window;
+	public function doCreate():AirAppWindow{
+		var options = new NativeWindowInitOptions();
+		var window = new NativeWindow(options);
+		return windowAdded(window);
 	}
 	
 	public function hideAll():Void
 	{
-		for (window in _list){
+		for (window in list){
 			window.visible.value = false;
+		}
+	}
+	
+	public function closeAll():Void
+	{
+		for (window in list){
+			window.close();
 		}
 	}
 	
 	public function exit(exitCode:Int) 
 	{
-		NativeApplication.nativeApplication.exit(errorCode);
+		NativeApplication.nativeApplication.exit(exitCode);
 	}
 }
 
-/*typedef InitialWindow =
-{
-	?title:String,
-	?content:String,
-	?systemChrome:String,
-	?transparent:Bool,
-	?visible:Bool,
-	?minimizable:Bool,
-	?maximizable:Bool,
-	?resizable:Bool,
-	?renderMode:String,
-	?depthAndStencil:Bool
-}*/
-
 class AirAppWindow
 {
-	public var closing:Signal2 = new Signal2<AirAppWindow, Void->Void>();
+	public var closing:Signal2<AirAppWindow, Void->Void> = new Signal2<AirAppWindow, Void->Void>();
 	
 	public var focused:Notifier<Bool> = new Notifier(false);
 	public var visible:Notifier<Bool> = new Notifier(false);
@@ -166,10 +128,15 @@ class AirAppWindow
 		window.addEventListener(Event.ACTIVATE, onWindowStateChange);
 		window.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, onWindowStateChange);
 		
-		focused.add(onFocusedChanged);
-		visible.add(onVisibleChanged);
+		focused.change.add(onFocusedChanged);
+		visible.change.add(onVisibleChanged);
 		
 		onWindowStateChange();
+	}
+	
+	public function close():Void
+	{
+		window.close();
 	}
 	
 	function onFocusedChanged() 
@@ -215,7 +182,7 @@ class AirAppWindow
 	private function onWindowClose(e:Event):Void 
 	{
 		closing.dispatch(this, e.preventDefault);
-		if (!e.isDefaultPrevented){
+		if (!e.isDefaultPrevented()){
 			removeListeners();
 		}
 	}

@@ -34,6 +34,11 @@ class Files
 		return File.documentsDirectory.nativePath + slash();
 	}
 	
+	public static function imagDocsDir():String 
+	{
+		return documentsDir() + "imagination" + slash();
+	}
+	
 	public static function applicationDir():String 
 	{
 		return File.applicationDirectory.nativePath + slash();
@@ -51,7 +56,7 @@ class Files
 		#elseif air3
 		
 		if (appId == null) appId = App.getAppId();
-		return documentsDir() + "imagination" + slash() + appId + slash();
+		return imagDocsDir() + appId + slash();
 		
 		#end
 	}
@@ -67,17 +72,12 @@ class Files
 	{
 		if (resourcePath != null) return resourcePath;
 		if (appId == null) appId = App.getAppId();
-		resourcePath = documentsDir() + "imagination" + slash() + appId + (resourcePathSuffix==null ? "" : resourcePathSuffix) + "+resources" + slash();
+		resourcePath = imagDocsDir() + appId + (resourcePathSuffix==null ? "" : resourcePathSuffix) + "+resources" + slash();
 		return resourcePath;
 	}
 	public static function resourceUri(resource:String):String 
 	{
 		return resourcesDir() + resource;
-	}
-
-	public static function globalDocsDir():String 
-	{
-		return ensure(documentsDir() + "imagination/_global/");
 	}
 
 	public static function getTempFilePath():String 

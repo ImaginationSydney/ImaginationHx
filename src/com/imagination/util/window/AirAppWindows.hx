@@ -110,6 +110,11 @@ class AirAppWindow
 	public var focused:Notifier<Bool> = new Notifier(false);
 	public var visible:Notifier<Bool> = new Notifier(false);
 	
+	public var x(get, set):Float;
+	public var y(get, set):Float;
+	public var width(get, set):Float;
+	public var height(get, set):Float;
+	
 	var window:NativeWindow;
 	var wasActive:Bool;
 	var ignoreChanges:Bool;
@@ -195,5 +200,41 @@ class AirAppWindow
 		
 		window.removeEventListener(Event.ACTIVATE, onWindowStateChange);
 		window.removeEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, onWindowStateChange);
+	}
+	
+	function get_x():Float 
+	{
+		return window.x;
+	}
+	function set_x(value:Float):Float 
+	{
+		return window.x = value;
+	}
+	
+	function get_y():Float 
+	{
+		return window.y;
+	}
+	function set_y(value:Float):Float 
+	{
+		return window.y = value;
+	}
+	
+	function get_width():Float 
+	{
+		return window.width;
+	}
+	function set_width(value:Float):Float 
+	{
+		return window.width = value;
+	}
+	
+	function get_height():Float 
+	{
+		return window.height;
+	}
+	function set_height(value:Float):Float 
+	{
+		return window.height = value;
 	}
 }

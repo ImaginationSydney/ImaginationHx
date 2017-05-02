@@ -37,7 +37,7 @@ abstract AppWindows(NativeAppWindows) from NativeAppWindows
 
 	public function create():AppWindow
 	{
-		return this.doCreate();
+		return this.create();
 	}
 
 	public function foreach (onAdd:AppWindow->Void, onRemove:AppWindow->Void):Void

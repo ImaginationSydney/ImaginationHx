@@ -77,7 +77,7 @@ class AirAppWindows
 		return true;
 	}
 	
-	public function doCreate():AirAppWindow{
+	public function create():AirAppWindow{
 		var options = new NativeWindowInitOptions();
 		var window = new NativeWindow(options);
 		return windowAdded(window);

@@ -129,6 +129,12 @@ class Files
 		return path.substr(path.lastIndexOf(slash()) + 1);
 	}
 	
+	static public function pathToUri(path:String) : String
+	{
+		tempFile.nativePath = path;
+		return tempFile.url;
+	}
+	
 	static public function getIcon(value:String) : Null<BitmapData>
 	{
 		#if air

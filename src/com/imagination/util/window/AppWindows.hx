@@ -20,10 +20,10 @@ typedef NativeAppWindow = com.imagination.util.window.AirAppWindows.AirAppWindow
 abstract AppWindows(NativeAppWindows) from NativeAppWindows
 {
 
-	public var onAdded(get, never):Signal1<NativeAppWindow>;
-	public var onRemoved(get, never):Signal1<NativeAppWindow>;
+	public var onAdded(get, never):Signal1<AppWindow>;
+	public var onRemoved(get, never):Signal1<AppWindow>;
 
-	public var list(get, never):Array<AppWindow>;
+	@public public var list(get, never):Array<AppWindow>;
 
 	public function new()
 	{
@@ -61,8 +61,8 @@ abstract AppWindows(NativeAppWindows) from NativeAppWindows
 	}
 }
 
-@:forward(focused, close)
-abstract AppWindow(NativeAppWindow) from NativeAppWindow
+@:forward()
+abstract AppWindow(NativeAppWindow) from NativeAppWindow to NativeAppWindow
 {
 
 }

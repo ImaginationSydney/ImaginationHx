@@ -153,8 +153,8 @@ class JsAppWindow
 			window.addEventListener("blur", onHide);
 		}
 		
-		visible.add(onVisibleChange);
-		focused.add(onFocusedChange);
+		visible.change.add(onVisibleChange);
+		focused.change.add(onFocusedChange);
 	}
 	
 	function onVisibleChange() 

@@ -1,14 +1,9 @@
 package com.imagination.util.log.air;
-import com.imagination.delay.EnterFrame;
-import com.imagination.util.time.GlobalTime;
-import com.imagination.worker.ext.FileSysTasks;
 import com.imagination.util.log.Log.LogLevel;
+import com.imagination.util.time.GlobalTime;
 import com.imagination.worker.WorkerSwitchboard;
-import flash.events.Event;
-import flash.filesystem.File;
-import flash.filesystem.FileMode;
-import flash.filesystem.FileStream;
 import flash.Lib;
+import flash.filesystem.File;
 import haxe.Timer;
 
 using com.imagination.worker.ext.FileSysTasks;

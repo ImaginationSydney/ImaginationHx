@@ -99,12 +99,12 @@ class App
 	
 	static private function onWindowRemove(window:AppWindow) 
 	{
-		window.focused.add(onWindowFocusChanged);
+		window.focused.change.add(onWindowFocusChanged);
 		onWindowFocusChanged();
 	}
 	static private function onWindowAdd(window:AppWindow) 
 	{
-		window.focused.add(onWindowFocusChanged);
+		window.focused.change.add(onWindowFocusChanged);
 		if (window.focused.value) focused.value = true;
 	}
 	
@@ -184,7 +184,6 @@ class App
 			version = versionNode.next().firstChild().nodeValue;
 			break;
 		}
-		windows.checkManifest(appXml);
 		
 		#elseif openfl
 			var stage:Stage = Lib.current.stage;

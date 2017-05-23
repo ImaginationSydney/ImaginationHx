@@ -26,4 +26,13 @@ class Platform
 	{
 		return RealPlatform.isMobile();
 	}
+	
+	public static function is64Bit():Bool 
+	{
+		#if html5
+			return false;
+		#else
+			return RealPlatform.is64Bit();
+		#end
+	}
 }

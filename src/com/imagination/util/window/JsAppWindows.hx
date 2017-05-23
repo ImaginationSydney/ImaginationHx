@@ -116,6 +116,7 @@ class JsAppWindow
 	
 	public var visible:Notifier<Bool> = new Notifier(true);
 	public var focused:Notifier<Bool> = new Notifier(true);
+	public var title:Notifier<String> = new Notifier();
 	
 	var window:Window;
 	var ignoreChanges:Bool;
@@ -128,6 +129,8 @@ class JsAppWindow
 		this.window = window;
 		this.visProp = visProp;
 		this.visEvent = visEvent;
+		
+		title.value = window.document.title;
 		
 		this.window.addEventListener("beforeunload", onBeginExit);
 		this.window.addEventListener("unload", onExit);
@@ -155,6 +158,7 @@ class JsAppWindow
 		
 		visible.change.add(onVisibleChange);
 		focused.change.add(onFocusedChange);
+		title.change.add(onTitleChange);
 	}
 	
 	function onVisibleChange() 
@@ -166,6 +170,10 @@ class JsAppWindow
 	{
 		if (ignoreChanges) return;
 		focused.value = !focused.value;
+	}
+	function onTitleChange() 
+	{
+		window.document.title = title.value;
 	}
 	
 	private function onBlur(e:Event):Void 

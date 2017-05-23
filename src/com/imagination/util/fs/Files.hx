@@ -62,15 +62,21 @@ class Files
 		#end
 	}
 	
-	static var reourcePath:String;
+	static var resourcePath:String;
+	static var resourcePathSuffix:String;
+	public static function setResourceSuffix(value:String):Void 
+	{
+		resourcePathSuffix = value;
+		resourcePath = null;
+	}
 	public static function resourcesDir(?appId:String):String 
 	{
-		if (reourcePath != null) return reourcePath;
+		if (resourcePath != null) return resourcePath;
 		if (appId == null) appId = App.getAppId();
-		reourcePath = imagDocsDir() + appId + "+resources" + slash();
-		return reourcePath;
+		resourcePath = imagDocsDir() + appId + (resourcePathSuffix==null ? "" : resourcePathSuffix) + "+resources" + slash();
+		return resourcePath;
 	}
-	public static function resourcesUri(resource:String):String 
+	public static function resourceUri(resource:String):String 
 	{
 		return resourcesDir() + resource;
 	}
@@ -172,7 +178,7 @@ class Files
 		if (uri.charAt(uri.length - 1) != "/") uri += "/";
 		resourceLocation = uri;
 	}
-	public static function resourcesUri(resource:String):String 
+	public static function resourceUri(resource:String):String 
 	{
 		return resourceLocation + resource;
 	}

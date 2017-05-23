@@ -1,4 +1,5 @@
 package com.imagination.util.app;
+import com.imagination.util.window.AppWindows.AppWindow;
 
 #if openfl
 import openfl.Lib;
@@ -20,6 +21,7 @@ import js.html.Event;
  * @author P.J.Shand
  */
 @:allow(com.imagination.util.app.App)
+@:allow(com.imagination.util.window.AppWindows)
 class AppExit
 {
 	static private var exitConfirmers:Array<ExitConfirmer> = [];
@@ -38,14 +40,29 @@ class AppExit
 		exitConfirmers = [];
 		exitCleanups = [];
 		
-		#if flash
+		App.windows.lastWindowClosing.add(onLastWindowClosing);
+		
+		/*#if flash
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onBeginExit);
 		#elseif js
 			js.Browser.window.addEventListener("beforeunload", onBeginExit);
 			js.Browser.window.addEventListener("unload", onExit);
 		#else
 			// NativeApplication not supported
-		#end
+		#end*/
+	}
+	
+	static private function onLastWindowClosing(cancel:Void->Void) : Void
+	{
+		//trace("onLastWindowClosing: " + exitingErrorCode);
+		var errorCode:Int;
+		if (exitingErrorCode == null){
+			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
+		}else{
+			errorCode = exitingErrorCode;
+		}
+		//trace("onBeginExit: "+errorCode+" "+exitingErrorCode);
+		handleExitEvent(errorCode, cancel);
 	}
 	
 	static public function exit(errorCode:Int = 0) 
@@ -55,21 +72,7 @@ class AppExit
 		}
 		exitingErrorCode = errorCode;
 		handleExitEvent(errorCode, function(){});
-		/*#if flash
-			var event = new Event(Event.EXITING, false, true);
-			NativeApplication.nativeApplication.dispatchEvent(event);
-			if (!event.isDefaultPrevented()){
-				finaliseExit(errorCode);
-			}
-		#else
-			// NativeApplication not supported
-		#end*/
 		exitingErrorCode = null;
-	}
-	
-	static private function checkConfirmers() 
-	{
-		
 	}
 	
 	static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
@@ -98,7 +101,7 @@ class AppExit
 		exitCleanups.remove(handler);
 	}
 	
-	#if flash
+	/*#if flash
 	static private function onBeginExit(e:Event):Void 
 	{
 		trace("onBeginExit: " + exitingErrorCode);
@@ -131,13 +134,14 @@ class AppExit
 	{
 		callExitCleanup(0, 0);
 	}
-	#end
+	#end*/
 	
-	static private function handleExitEvent(errorCode:Int, preventDefault:Void->Void) :Bool
+	static private function handleExitEvent(errorCode:Int, cancel:Void->Void) :Bool
 	{
 		if (ignoreExit) return false;
 		if (exitConfirmers.length > 0 || exitCleanups.length > 0) {
 			callingExit = true;
+			cancel();
 			callExitConfirmer(errorCode, 0);
 			if (callingExit){
 				preventDefault();
@@ -152,7 +156,11 @@ class AppExit
 	static private function callExitConfirmer(errorCode:Int, ind:Int) 
 	{
 		if (ind >= exitConfirmers.length) {
-			#if flash
+			if (App.windows.hideSupported){
+				App.windows.hideAll();
+			}
+			callExitCleanup(errorCode, 0);
+			/*#if flash
 				ignoreExit = true;
 				// hide windows
 				for (win in NativeApplication.nativeApplication.openedWindows){
@@ -161,7 +169,7 @@ class AppExit
 				callExitCleanup(errorCode, 0);
 			#else
 				callingExit = false;
-			#end
+			#end*/
 		}else {
 			var exitConfirmer:ExitConfirmer = exitConfirmers[ind];
 			exitConfirmer(errorCode, doExitContinue.bind(_, errorCode, ind + 1));
@@ -189,14 +197,16 @@ class AppExit
 	
 	static private function finaliseExit(errorCode:Int) 
 	{
-		#if flash
+		App.windows.closeAll();
+		App.windows.exit(errorCode);
+		/*#if flash
 			for (window in NativeApplication.nativeApplication.openedWindows){
 				window.close();
 			}
 			NativeApplication.nativeApplication.exit(errorCode);
 		#else
 			// NativeApplication not supported
-		#end
+		#end*/
 	}
 }
 

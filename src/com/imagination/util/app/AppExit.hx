@@ -1,4 +1,5 @@
 package com.imagination.util.app;
+import com.imagination.delay.Delay;
 import com.imagination.util.window.AppWindows.AppWindow;
 
 #if openfl
@@ -28,7 +29,9 @@ class AppExit
 	static private var exitCleanups:Array<ExitCleanup> = [];
 	static private var ignoreExit:Bool;
 	static private var callingExit:Bool;
-	static private var exitingErrorCode:Null<Int>;
+	static private var exitingexitCode:Null<Int>;
+	static private var isSetup:Bool;
+	static private var awaitingCleanups:Int;
 	
 	public function new() 
 	{
@@ -37,49 +40,36 @@ class AppExit
 	
 	static public function setup() 
 	{
-		exitConfirmers = [];
-		exitCleanups = [];
-		
+		if (isSetup) return;
+		isSetup = true;
 		App.windows.lastWindowClosing.add(onLastWindowClosing);
-		
-		/*#if flash
-			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onBeginExit);
-		#elseif js
-			js.Browser.window.addEventListener("beforeunload", onBeginExit);
-			js.Browser.window.addEventListener("unload", onExit);
-		#else
-			// NativeApplication not supported
-		#end*/
 	}
 	
 	static private function onLastWindowClosing(cancel:Void->Void) : Void
 	{
-		//trace("onLastWindowClosing: " + exitingErrorCode);
-		var errorCode:Int;
-		if (exitingErrorCode == null){
-			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
+		var exitCode:Int;
+		if (exitingexitCode == null){
+			exitCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
 		}else{
-			errorCode = exitingErrorCode;
+			exitCode = exitingexitCode;
 		}
-		//trace("onBeginExit: "+errorCode+" "+exitingErrorCode);
-		handleExitEvent(errorCode, cancel);
+		//trace("onBeginExit: "+exitCode+" "+exitingexitCode);
+		handleExitEvent(exitCode, cancel);
 	}
 	
-	static public function exit(errorCode:Int = 0) 
+	static public function exit(exitCode:Int = 0) 
 	{
-		if (exitingErrorCode != null || ignoreExit){
+		if (exitingexitCode != null || ignoreExit || callingExit){
 			return;
 		}
-		exitingErrorCode = errorCode;
-		handleExitEvent(errorCode, function(){});
-		exitingErrorCode = null;
+		exitingexitCode = exitCode;
+		handleExitEvent(exitCode, function(){});
+		exitingexitCode = null;
 	}
 	
 	static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
 	{
-		if (exitConfirmers == null) {
-			setup();
-		}
+		setup();
 		exitConfirmers.push(handler);
 		
 	}
@@ -90,9 +80,7 @@ class AppExit
 	
 	static public function addExitCleanup(handler:Int -> (Void -> Void) -> Void) 
 	{
-		if (exitCleanups == null) {
-			setup();
-		}
+		setup();
 		exitCleanups.push(handler);
 		
 	}
@@ -101,112 +89,65 @@ class AppExit
 		exitCleanups.remove(handler);
 	}
 	
-	/*#if flash
-	static private function onBeginExit(e:Event):Void 
+	static private function handleExitEvent(exitCode:Int, cancel:Void->Void) :Bool
 	{
-		trace("onBeginExit: " + exitingErrorCode);
-		var errorCode:Int;
-		if (exitingErrorCode == null){
-			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
-		}else{
-			errorCode = exitingErrorCode;
-		}
-		trace("onBeginExit: "+errorCode+" "+exitingErrorCode);
-		handleExitEvent(errorCode, e.preventDefault);
-	}
-	#elseif js
-	static private function onBeginExit(e:Event):Bool 
-	{
-		var errorCode:Int;
-		if (exitingErrorCode == null){
-			errorCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
-		}else{
-			errorCode = exitingErrorCode;
-		}
-		if (!handleExitEvent(errorCode, e.preventDefault)){
-			var res = js.Browser.window.confirm("You will loose unsaved work"); // This message will be replaced by most browsers
-			return res;
-		}else{
-			return true;
-		}
-	}
-	static private function onExit(e:Event) 
-	{
-		callExitCleanup(0, 0);
-	}
-	#end*/
-	
-	static private function handleExitEvent(errorCode:Int, cancel:Void->Void) :Bool
-	{
-		if (ignoreExit) return false;
+		if (ignoreExit || callingExit) return false;
 		if (exitConfirmers.length > 0 || exitCleanups.length > 0) {
 			callingExit = true;
-			cancel();
-			callExitConfirmer(errorCode, 0);
-			/*if (callingExit){
-				preventDefault();
-			}*/
+			callExitConfirmer(exitCode, 0);
+			if (callingExit){
+				cancel();
+			}
 			return callingExit;
 		}else{
-			finaliseExit(errorCode);
+			finaliseExit(exitCode);
 			return true;
 		}
 	}
 	
-	static private function callExitConfirmer(errorCode:Int, ind:Int) 
+	static private function callExitConfirmer(exitCode:Int, ind:Int) 
 	{
 		if (ind >= exitConfirmers.length) {
-			if (App.windows.hideSupported){
+			if (exitCleanups.length == 0){
+				finaliseExit(exitCode);
+			}else{
 				App.windows.hideAll();
-			}
-			callExitCleanup(errorCode, 0);
-			/*#if flash
-				ignoreExit = true;
-				// hide windows
-				for (win in NativeApplication.nativeApplication.openedWindows){
-					win.visible = false;
+				awaitingCleanups = exitCleanups.length;
+				for (cleanup in exitCleanups){
+					cleanup(exitCode, onCleanupDone.bind(exitCode));
 				}
-				callExitCleanup(errorCode, 0);
-			#else
-				callingExit = false;
-			#end*/
+				if(callingExit) Delay.byTime(10, finaliseExit.bind(exitCode)); // Give cleanups a maximum of 10 seconds to run
+			}
+			
 		}else {
 			var exitConfirmer:ExitConfirmer = exitConfirmers[ind];
-			exitConfirmer(errorCode, doExitContinue.bind(_, errorCode, ind + 1));
+			exitConfirmer(exitCode, doExitContinue.bind(_, exitCode, ind + 1));
 		}
 	}
 	
-	static private function doExitContinue(cont:Bool, errorCode:Int, ind:Int) 
+	static private function onCleanupDone(exitCode:Int) 
+	{
+		awaitingCleanups--;
+		if (awaitingCleanups == 0){
+			finaliseExit(exitCode);
+		}
+	}
+	
+	static private function doExitContinue(cont:Bool, exitCode:Int, ind:Int) 
 	{
 		if (!cont){
 			return;
 		}
-		callExitConfirmer(errorCode, ind);
+		callExitConfirmer(exitCode, ind);
 	}
 	
-	static private function callExitCleanup(errorCode:Int, ind:Int) 
+	static private function finaliseExit(exitCode:Int) 
 	{
-		if (ind >= exitCleanups.length) {
-			callingExit = false;
-			finaliseExit(errorCode);
-		}else {
-			var exitCleanup:ExitCleanup = exitCleanups[ind];
-			exitCleanup(errorCode, callExitCleanup.bind(errorCode, ind + 1));
-		}
-	}
-	
-	static private function finaliseExit(errorCode:Int) 
-	{
+		ignoreExit = true;
 		App.windows.closeAll();
-		App.windows.exit(errorCode);
-		/*#if flash
-			for (window in NativeApplication.nativeApplication.openedWindows){
-				window.close();
-			}
-			NativeApplication.nativeApplication.exit(errorCode);
-		#else
-			// NativeApplication not supported
-		#end*/
+		App.windows.exit(exitCode);
+		ignoreExit = false;
+		callingExit = false;
 	}
 }
 

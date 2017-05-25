@@ -1,14 +1,20 @@
 package com.imagination.util.window;
 import com.imagination.core.type.Notifier;
 import com.imagination.util.app.App;
+import com.imagination.util.app.AppExit;
+import com.imagination.util.geom.Point;
+import com.imagination.util.signals.Signal.Signal0;
 import com.imagination.util.signals.Signal.Signal1;
 import com.imagination.util.signals.Signal.Signal2;
 import flash.desktop.NativeApplication;
 import flash.display.NativeWindow;
 import flash.display.NativeWindowInitOptions;
+import flash.display.NativeWindowResize;
 import flash.display.NativeWindowSystemChrome;
+import flash.events.NativeWindowBoundsEvent;
 import flash.events.NativeWindowDisplayStateEvent;
 import flash.display.NativeWindowDisplayState;
+import openfl.display.Stage;
 import openfl.events.Event;
 
 /**
@@ -17,6 +23,7 @@ import openfl.events.Event;
  * @author Pete Shand
  * @author Thomas Byrne
  */
+@:access(com.imagination.util.app.AppExit)
 class AirAppWindows
 {
 	public var createSupported(get, null): Bool;
@@ -39,6 +46,12 @@ class AirAppWindows
 		for (window in app.openedWindows){
 			windowAdded(window);
 		}
+		app.addEventListener("exiting", onAppExiting);
+	}
+	
+	private function onAppExiting(e:Event):Void 
+	{
+		AppExit.onLastWindowClosing(e.preventDefault);
 	}
 	
 	/**
@@ -107,17 +120,26 @@ class AirAppWindow
 {
 	public var closing:Signal2<AirAppWindow, Void->Void> = new Signal2<AirAppWindow, Void->Void>();
 	
+	public var onMove(get, null):Signal0;
+	public var onResize(get, null):Signal0;
+	
 	public var focused:Notifier<Bool> = new Notifier(false);
 	public var visible:Notifier<Bool> = new Notifier(false);
 	public var title:Notifier<String> = new Notifier();
 	public var alwaysInFront:Notifier<Bool> = new Notifier(false);
 	
-	public var x(get, set):Float;
-	public var y(get, set):Float;
-	public var width(get, set):Float;
-	public var height(get, set):Float;
+	public var x(get, null):Float;
+	public var y(get, null):Float;
+	public var width(get, null):Float;
+	public var height(get, null):Float;
 	
 	public var nativeWindow(get, null):NativeWindow;
+	
+	public var contentsScaleFactor(get, null):Float;
+	
+	public var displayState(get, null):NativeWindowDisplayState;
+	
+	public var stage(get, null):Stage;
 	
 	var window:NativeWindow;
 	var wasActive:Bool;
@@ -158,6 +180,15 @@ class AirAppWindow
 		window.title = title.value;
 	}
 	
+	inline public function startMove():Void
+	{
+		window.startMove();
+	}
+	inline public function startResize(resize:NativeWindowResize):Void
+	{
+		window.startResize(resize);
+	}
+	
 	public function close():Void
 	{
 		window.close();
@@ -184,6 +215,7 @@ class AirAppWindow
 			return;
 		}
 		
+		//if (!visible.value) return;
 		window.visible = visible.value;
 	}
 	
@@ -228,42 +260,116 @@ class AirAppWindow
 	
 	function get_x():Float 
 	{
-		return window.x;
+		return window.x * window.stage.contentsScaleFactor;
 	}
-	function set_x(value:Float):Float 
+	
+	function get_contentsScaleFactor():Float 
 	{
-		return window.x = value;
+		return window.stage.contentsScaleFactor;
 	}
 	
 	function get_y():Float 
 	{
-		return window.y;
-	}
-	function set_y(value:Float):Float 
-	{
-		return window.y = value;
+		return window.y * window.stage.contentsScaleFactor;
 	}
 	
 	function get_width():Float 
 	{
-		return window.width;
-	}
-	function set_width(value:Float):Float 
-	{
-		return window.width = value;
+		return window.width * window.stage.contentsScaleFactor;
 	}
 	
 	function get_height():Float 
 	{
-		return window.height;
+		return window.height * window.stage.contentsScaleFactor;
 	}
-	function set_height(value:Float):Float 
+	
+	function get_stage():Stage 
 	{
-		return window.height = value;
+		return window.stage;
+	}
+	
+	function get_displayState():NativeWindowDisplayState 
+	{
+		return window.displayState;
+	}
+	
+	public function moveTo(x:Float, y:Float):Void
+	{
+		var scale = window.stage.contentsScaleFactor;
+		
+		window.x = x / scale;
+		window.y = y / scale;
+		
+		if (scale != window.stage.contentsScaleFactor){
+			// moved to a different density screen
+			scale = window.stage.contentsScaleFactor;
+			window.x = x / scale;
+			window.y = y / scale;
+		}
 	}
 	
 	function get_nativeWindow():NativeWindow 
 	{
 		return window;
+	}
+	
+	public function resizeTo(width:Float, height:Float):Void
+	{
+		var scale = window.stage.contentsScaleFactor;
+		
+		window.width = width / scale;
+		window.height = height / scale;
+		
+		if (scale != window.stage.contentsScaleFactor){
+			// moved to a different density screen
+			scale = window.stage.contentsScaleFactor;
+			window.width = width / scale;
+			window.height = height / scale;
+		}
+	}
+	
+	public function setBounds(x:Float, y:Float, width:Float, height:Float):Void
+	{
+		var scale = window.stage.contentsScaleFactor;
+		
+		window.x = x / scale;
+		window.y = y / scale;
+		window.width = width / scale;
+		window.height = height / scale;
+		
+		if (scale != window.stage.contentsScaleFactor){
+			// moved to a different density screen
+			scale = window.stage.contentsScaleFactor;
+			window.x = x / scale;
+			window.y = y / scale;
+			window.width = width / scale;
+			window.height = height / scale;
+		}
+	}
+	
+	function get_onMove():Signal0 
+	{
+		if (onMove == null){
+			onMove = new Signal0();
+			window.addEventListener(NativeWindowBoundsEvent.MOVE, onNativeMove);
+		}
+		return onMove;
+	}
+	function get_onResize():Signal0 
+	{
+		if (onResize == null){
+			onResize = new Signal0();
+			window.addEventListener(NativeWindowBoundsEvent.RESIZE, onNativeResize);
+		}
+		return onResize;
+	}
+	
+	private function onNativeMove(e:NativeWindowBoundsEvent):Void 
+	{
+		onMove.dispatch();
+	}
+	private function onNativeResize(e:NativeWindowBoundsEvent):Void 
+	{
+		onResize.dispatch();
 	}
 }

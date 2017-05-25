@@ -125,7 +125,7 @@ class App
 		AppExit.exit(errorCode);
 	}
 	
-	static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
+	/*static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
 	{
 		AppExit.addExitConfirmer(handler);
 		
@@ -144,7 +144,7 @@ class App
 	static public function removeExitCleanup(handler:Int -> (Void -> Void) -> Void) 
 	{
 		AppExit.removeExitCleanup(handler);
-	}
+	}*/
 	
 	#if flash
 	static public function getAppExe() 

@@ -66,3 +66,10 @@ abstract AppWindow(NativeAppWindow) from NativeAppWindow to NativeAppWindow
 {
 
 }
+
+typedef MouseInfo =
+{
+	stageX:Float,
+	stageY:Float,
+	shift:Bool,
+}

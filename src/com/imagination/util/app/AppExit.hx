@@ -111,7 +111,7 @@ class AppExit
 			if (exitCleanups.length == 0){
 				finaliseExit(exitCode);
 			}else{
-				App.windows.hideAll();
+				if(App.windows.hideSupported) App.windows.hideAll();
 				awaitingCleanups = exitCleanups.length;
 				for (cleanup in exitCleanups){
 					cleanup(exitCode, onCleanupDone.bind(exitCode));

@@ -114,7 +114,11 @@ class AppExit
 				if(App.windows.hideSupported) App.windows.hideAll();
 				awaitingCleanups = exitCleanups.length;
 				for (cleanup in exitCleanups){
-					cleanup(exitCode, onCleanupDone.bind(exitCode));
+					try{
+						cleanup(exitCode, onCleanupDone.bind(exitCode));
+					}catch (e:Dynamic){
+						onCleanupDone(exitCode);
+					}
 				}
 				if(callingExit) Delay.byTime(10, finaliseExit.bind(exitCode)); // Give cleanups a maximum of 10 seconds to run
 			}

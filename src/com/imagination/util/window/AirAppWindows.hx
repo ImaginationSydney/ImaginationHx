@@ -186,7 +186,7 @@ class AirAppWindow
 	function onVisibleChanged() 
 	{
 		if (ignoreChanges) return;
-		if (!wasActive){
+		if (!wasActive || !window.active){
 			onWindowDeactivate();
 			return;
 		}
@@ -207,6 +207,7 @@ class AirAppWindow
 	private function onWindowDeactivate(?e:Event):Void 
 	{
 		ignoreChanges = true;
+		wasActive = false;
 		visible.value = false;
 		ignoreChanges = false;
 	}

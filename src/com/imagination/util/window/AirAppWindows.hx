@@ -133,7 +133,7 @@ class AirAppWindow
 	
 	public var contentsScaleFactor(get, null):Float;
 	
-	public var displayState(get, null):NativeWindowDisplayState;
+	@:isVar public var displayState(default, null):Notifier<NativeWindowDisplayState> = new Notifier<NativeWindowDisplayState>();
 	
 	public var stage(get, null):Stage;
 	
@@ -170,6 +170,11 @@ class AirAppWindow
 		window.startResize(resize);
 	}
 	
+	public function restore():Void
+	{
+		window.restore();
+	}
+	
 	public function close():Void
 	{
 		window.close();
@@ -202,6 +207,8 @@ class AirAppWindow
 		visible.value = wasActive && window.displayState != NativeWindowDisplayState.MINIMIZED;
 		focused.value = window.active;
 		ignoreChanges = false;
+		
+		displayState.value = window.displayState;
 	}
 	
 	private function onWindowDeactivate(?e:Event):Void 
@@ -265,11 +272,6 @@ class AirAppWindow
 		return window.stage;
 	}
 	
-	function get_displayState():NativeWindowDisplayState 
-	{
-		return window.displayState;
-	}
-	
 	public function moveTo(x:Float, y:Float):Void
 	{
 		var scale = window.stage.contentsScaleFactor;
@@ -283,6 +285,8 @@ class AirAppWindow
 			window.x = x / scale;
 			window.y = y / scale;
 		}
+		
+		onMove.dispatch();
 	}
 	
 	public function resizeTo(width:Float, height:Float):Void
@@ -298,6 +302,8 @@ class AirAppWindow
 			window.width = width / scale;
 			window.height = height / scale;
 		}
+		
+		onResize.dispatch();
 	}
 	
 	public function setBounds(x:Float, y:Float, width:Float, height:Float):Void
@@ -317,6 +323,9 @@ class AirAppWindow
 			window.width = width / scale;
 			window.height = height / scale;
 		}
+		
+		onMove.dispatch();
+		onResize.dispatch();
 	}
 	
 	function get_onMove():Signal0 

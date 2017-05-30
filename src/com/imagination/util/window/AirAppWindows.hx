@@ -125,11 +125,15 @@ class AirAppWindow
 	
 	public var focused:Notifier<Bool> = new Notifier(false);
 	public var visible:Notifier<Bool> = new Notifier(false);
+	public var title:Notifier<String> = new Notifier();
+	public var alwaysInFront:Notifier<Bool> = new Notifier(false);
 	
 	public var x(get, null):Float;
 	public var y(get, null):Float;
 	public var width(get, null):Float;
 	public var height(get, null):Float;
+	
+	public var nativeWindow(get, null):NativeWindow;
 	
 	public var contentsScaleFactor(get, null):Float;
 	
@@ -155,10 +159,25 @@ class AirAppWindow
 		window.addEventListener(Event.ACTIVATE, onWindowStateChange);
 		window.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, onWindowStateChange);
 		
+		title.value = window.title;
+		alwaysInFront.value= window.alwaysInFront;
+		
 		focused.change.add(onFocusedChanged);
 		visible.change.add(onVisibleChanged);
+		title.change.add(onTitleChanged);
+		alwaysInFront.change.add(onAlwaysInFrontChanged);
 		
 		onWindowStateChange();
+	}
+	
+	function onAlwaysInFrontChanged() 
+	{
+		window.alwaysInFront = alwaysInFront.value;
+	}
+	
+	function onTitleChanged() 
+	{
+		window.title = title.value;
 	}
 	
 	inline public function startMove():Void
@@ -178,6 +197,11 @@ class AirAppWindow
 	public function close():Void
 	{
 		window.close();
+	}
+	
+	public function activate():Void
+	{
+		window.activate();
 	}
 	
 	function onFocusedChanged() 
@@ -304,6 +328,11 @@ class AirAppWindow
 		}
 		
 		onResize.dispatch();
+	}
+	
+	function get_nativeWindow():NativeWindow 
+	{
+		return window;
 	}
 	
 	public function setBounds(x:Float, y:Float, width:Float, height:Float):Void

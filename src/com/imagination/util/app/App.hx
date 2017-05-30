@@ -4,6 +4,7 @@ import com.imagination.util.app.AppExit.ExitContinue;
 import com.imagination.util.window.AppWindows;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
+import haxe.xml.Fast;
 
 #if openfl
 import openfl.Lib;
@@ -34,6 +35,7 @@ class App
 	}
 	
 	static private var appId:String;
+	static private var appExe:String;
 	static private var version:String;
 	static private var appFilename:String;
 	
@@ -143,6 +145,22 @@ class App
 	{
 		AppExit.removeExitCleanup(handler);
 	}
+	
+	#if flash
+	static public function getAppExe() 
+	{
+		if (appExe != null) return appExe;
+		
+		var appDir = flash.filesystem.File.applicationDirectory;
+		checkManifest();
+		appExe = appDir.resolvePath(appFilename + ".exe").nativePath;
+		return appExe;
+	}
+	static public function getAppDir() 
+	{
+		return flash.filesystem.File.applicationDirectory.nativePath;
+	}
+	#end
 	
 	static private function checkManifest() 
 	{

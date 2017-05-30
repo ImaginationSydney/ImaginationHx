@@ -1,6 +1,7 @@
 package com.imagination.util.fs;
 import com.imagination.util.app.App;
 import com.imagination.util.app.Platform;
+import openfl.display.BitmapData;
 
 /**
  * ...
@@ -129,10 +130,48 @@ class Files
 		return tempFile.nativePath;
 	}
 	
+	static public function getFileName(path:String) : String
+	{
+		return path.substr(path.lastIndexOf(slash()) + 1);
+	}
+	
+	static public function pathToUri(path:String) : String
+	{
+		tempFile.nativePath = path;
+		return tempFile.url;
+	}
+	
+	static public function getIcon(value:String) : Null<BitmapData>
+	{
+		#if air
+		var file = new File(value);
+		return file.icon == null ? null : file.icon.bitmaps[0];
+		#else
+		return null;
+		#end
+	}
+	
 }
 #else
 class Files
 {
+	public static inline function slash():String 
+	{
+		if (Platform.isWindows()) {
+			return "\\";
+		}else {
+			return "/";
+		}
+	}
+	public static inline function ensure(path:String):String 
+	{
+		if (Platform.isWindows()) {
+			return path.split("/").join("\\");
+		}else {
+			return path;
+		}
+	}
+	
 	static var resourceLocation:String;
 	public static function setResourceLocation(uri:String):Void 
 	{
@@ -142,6 +181,11 @@ class Files
 	public static function resourceUri(resource:String):String 
 	{
 		return resourceLocation + resource;
+	}
+	
+	static public function getFileName(path:String) : String
+	{
+		return path.substr(path.lastIndexOf(slash()) + 1);
 	}
 }
 #end

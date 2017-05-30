@@ -144,6 +144,22 @@ import com.imagination.air.util.EventListenerTracker;
 			}
 		}
 		
+		public static function saveBinary(path:String, binary:ByteArray):Bool
+		{
+			try{
+				temp.nativePath = path;
+				confirmParent(temp);
+				var stream:FileStream =  new FileStream();
+				stream.open(temp, FileMode.WRITE);
+				binary.position = 0;
+				stream.writeBytes(binary);
+				stream.close();
+				return true;
+			}catch (e:Dynamic){
+				return false;
+			}
+		}
+		
 		public static function saveBinaryAsync(path:String, binary:ByteArray, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
 			try{
@@ -221,11 +237,28 @@ import com.imagination.air.util.EventListenerTracker;
 			temp.deleteDirectory(deleteDirectoryContents);
 		}
 		
-		static public function deleteDirectoryAsync(path : String, deleteDirectoryContents:Bool = false) :Void
+		static public function deleteDirectoryAsync(path : String, deleteDirectoryContents:Bool = false, ?onComplete:Bool->Void) :Void
 		{
 			if (!exists(path)) return;
 			temp.nativePath = path;
-			temp.deleteDirectoryAsync(deleteDirectoryContents);
+			if (onComplete != null){
+				var eventTracker = new EventListenerTracker(temp);
+				eventTracker.addEventListener(Event.COMPLETE, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(false);
+				});
+				eventTracker.addEventListener(IOErrorEvent.IO_ERROR, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(false);
+				});
+			}
+			try{
+				temp.deleteDirectoryAsync(deleteDirectoryContents);
+			}catch (e:Dynamic){
+				if (onComplete != null){
+					onComplete(false);
+				}
+			}
 		}
 		
 		static public function createDirectory(path : String) :Void

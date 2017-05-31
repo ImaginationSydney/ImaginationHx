@@ -29,9 +29,10 @@ class AppExit
 	static private var exitCleanups:Array<ExitCleanup> = [];
 	static private var ignoreExit:Bool;
 	static private var callingExit:Bool;
-	static private var exitingexitCode:Null<Int>;
+	static private var exitingExitCode:Null<Int>;
 	static private var isSetup:Bool;
 	static private var awaitingCleanups:Int;
+	static private var stillCallingNativeExit:Bool;
 	
 	public function new() 
 	{
@@ -48,23 +49,35 @@ class AppExit
 	static private function onLastWindowClosing(cancel:Void->Void) : Void
 	{
 		var exitCode:Int;
-		if (exitingexitCode == null){
-			exitCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
-		}else{
-			exitCode = exitingexitCode;
-		}
+		#if js
+			exitCode = 0;
+		#else
+			if (exitingExitCode == null){
+				exitCode = 1; // This exit wasn't triggered by App.exit, so we'll assume it's an error.
+			}else{
+				exitCode = exitingExitCode;
+			}
+		#end
 		//trace("onBeginExit: "+exitCode+" "+exitingexitCode);
+		stillCallingNativeExit = true;
 		handleExitEvent(exitCode, cancel);
+		stillCallingNativeExit = false;
+		
+		#if !js
+		if (!callingExit){
+			finaliseExit(exitCode);
+		}
+		#end
 	}
 	
 	static public function exit(exitCode:Int = 0) 
 	{
-		if (exitingexitCode != null || ignoreExit || callingExit){
+		if (exitingExitCode != null || ignoreExit || callingExit){
 			return;
 		}
-		exitingexitCode = exitCode;
+		exitingExitCode = exitCode;
 		handleExitEvent(exitCode, function(){});
-		exitingexitCode = null;
+		exitingExitCode = null;
 	}
 	
 	static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
@@ -98,7 +111,8 @@ class AppExit
 			if (callingExit){
 				cancel();
 			}
-			return callingExit;
+			trace("callingExit: " + callingExit);
+			return !callingExit;
 		}else{
 			finaliseExit(exitCode);
 			return true;
@@ -147,10 +161,12 @@ class AppExit
 	
 	static private function finaliseExit(exitCode:Int) 
 	{
-		ignoreExit = true;
-		App.windows.closeAll();
-		App.windows.exit(exitCode);
-		ignoreExit = false;
+		if(!stillCallingNativeExit){
+			ignoreExit = true;
+			App.windows.closeAll();
+			App.windows.exit(exitCode);
+			ignoreExit = false;
+		}
 		callingExit = false;
 	}
 }

@@ -4,6 +4,7 @@ import openfl.Lib;
 /**
  * ...
  * @author P.J.Shand
+ * @author Tom Byrne
  */
 class GlobalTime
 {
@@ -15,10 +16,12 @@ class GlobalTime
 	@:isVar static public var timezoneOffset:Float = 0;   			// In Minutes
 	@:isVar static public var pause(default, set):Bool = false;
 	
+	@:isVar static public var defaultTimezoneOffset(get, null):Float; // This can be used to reset the timezone to match the system, In Minutes
+	
 	static private var _initTimeUtc:Float;
 	static private var _startTimer:Float;
 	static private var _pausedElapsed:Float = 0;
-	static private var _defaultTimezone:Float = 0;
+	static private var _defaultTimezoneOffset:Float = 0;
 	static private var _dummyDate:Date;
 	
 	static public var inited:Bool = false;
@@ -31,12 +34,12 @@ class GlobalTime
 		_startTimer = Lib.getTimer();
 		
 		#if (flash || js)
-			_defaultTimezone = untyped _dummyDate.getTimezoneOffset();
-			timezoneOffset = _defaultTimezone;
+			_defaultTimezoneOffset = untyped _dummyDate.getTimezoneOffset();
+			timezoneOffset = _defaultTimezoneOffset;
 		#end
 		
 		inited = true;
-	}	
+	}
 	
 	
 	public static function localToGlobal(time:Float, ?timezoneOffset:Float):Float
@@ -44,26 +47,32 @@ class GlobalTime
 		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
 		return time + timezoneOffset * MINUTE;
 	}
-	public static function globalToLocal(time:Float):Float
+	public static function globalToLocal(time:Float, ?timezoneOffset:Float):Float
 	{
+		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
 		return time - timezoneOffset * MINUTE;
 	}
 	
-	public static function now():Date
+	public static function now(?ret:Date):Date
 	{
-		init();
-		return nowInTimezone(timezoneOffset);
+		return dateFromTime(nowTimeUtc(), timezoneOffset, ret);
 	}
 	public static function nowInTimezone(timezoneOffset:Float, ?ret:Date):Date
 	{
+		return dateFromTime(nowTimeUtc(), timezoneOffset, ret);
+	}
+	public static function dateFromTime(utcTime:Float, ?timezoneOffset:Float, ?ret:Date) : Date
+	{
 		init();
-		var time = nowTimeUtc() - (timezoneOffset - _defaultTimezone) * MINUTE; // Can't set tiemzone on date object, so just offset relative UTC time (which isn't really accessible).
+		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
+		utcTime += -(timezoneOffset - _defaultTimezoneOffset) * MINUTE;
+		
 		#if (flash || js)
 			if (ret == null) ret = _dummyDate;
-			untyped ret.setTime(time);
+			untyped ret.setTime(utcTime);
 			return ret;
 		#else
-			return Date.fromTime(time);
+			return Date.fromTime(utcTime);
 		#end
 	}
 	
@@ -113,5 +122,10 @@ class GlobalTime
 			_startTimer = Lib.getTimer() - _pausedElapsed;
 		}
 		return value;
+	}
+	
+	static function get_defaultTimezoneOffset():Float 
+	{
+		return _defaultTimezoneOffset;
 	}
 }

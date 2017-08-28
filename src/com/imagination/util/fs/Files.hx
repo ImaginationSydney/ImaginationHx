@@ -54,7 +54,7 @@ class Files
 		var ind = path.lastIndexOf(slash());
 		return path.substr(0, ind + 1);
 		
-		#elseif air3
+		#elseif air
 		
 		if (appId == null) appId = App.getAppId();
 		return imagDocsDir() + appId + slash();
@@ -90,7 +90,7 @@ class Files
 		}
 		return ret;
 		
-		#elseif air3
+		#elseif air
 		
 		return File.createTempFile().nativePath;
 		
@@ -101,7 +101,7 @@ class Files
 	{
 		#if sys
 		return Sys.executablePath();
-		#elseif air3
+		#elseif air
 		if(Platform.isWindows()){
 			return File.applicationDirectory.nativePath + slash() + App.getAppFilename() + ".exe";
 		}else {
@@ -112,7 +112,7 @@ class Files
 	
 	public static function getUserDir():String 
 	{
-		#if air3
+		#if air
 		return File.userDirectory.nativePath;
 		#end
 	}

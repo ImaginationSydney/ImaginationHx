@@ -6,7 +6,7 @@ import com.imagination.util.fs.File;
  * ...
  * @author Thomas Byrne
  */
-#if air3
+#if air
 
 
 	typedef FileStream = flash.filesystem.FileStream;

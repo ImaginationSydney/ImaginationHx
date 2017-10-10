@@ -10,7 +10,7 @@ import openfl.net.SharedObject;
  * ...
  * @author Thomas Byrne
  */
-#if air3
+#if air
 
 
 	typedef File = flash.filesystem.File;

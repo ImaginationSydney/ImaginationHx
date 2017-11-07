@@ -144,7 +144,7 @@ class AppExit
 			cancel();
 			callExitConfirmer(errorCode, 0);
 			if (callingExit){
-				preventDefault();
+				//preventDefault();
 			}
 			return callingExit;
 		}else{

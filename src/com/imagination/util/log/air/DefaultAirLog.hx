@@ -31,7 +31,7 @@ class DefaultAirLog
 		
 		// Must be runtime conditional because of SWC packaging
 		//if(Capabilities.isDebugger){
-		#if !flash || debug
+		#if debug
 			Log.mapHandler(new TraceLogger(LogFormatImpl.fdFormat), Log.ALL_LEVELS);
 		#end
 		//}

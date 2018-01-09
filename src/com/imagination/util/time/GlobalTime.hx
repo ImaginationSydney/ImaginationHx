@@ -1,90 +1,131 @@
 package com.imagination.util.time;
+import openfl.Lib;
 
 /**
  * ...
  * @author P.J.Shand
+ * @author Tom Byrne
  */
 class GlobalTime
 {
-	static public var today(get, null):Date;
+	static private inline var MINUTE = (1000 * 60);
+	static private inline var HOUR = (MINUTE * 60);
+	static private inline var DAY = (HOUR * 24);
 	
-	@:isVar static public var offset(get, set):Float = 0;
-	static public var pause:Bool = false;
-	static private var _nowDate:Date;
-	static private var _nowTime:Null<Float>;
-	static private var _nowTimeWithOffset:Null<Float>;
+	@:isVar static public var offset:Float = 0;						// in Milliseconds
+	@:isVar static public var timezoneOffset:Float = 0;   			// In Minutes
+	@:isVar static public var pause(default, set):Bool = false;
 	
-	static private var _timezoneOffset:Null<Float>;
-	static public var timezoneOffset(get, null):Float;
+	@:isVar static public var defaultTimezoneOffset(get, null):Float; // This can be used to reset the timezone to match the system, In Minutes
 	
-	public function new() { }
+	static private var _initTimeUtc:Float;
+	static private var _startTimer:Float;
+	static private var _pausedElapsed:Float = 0;
+	static private var _defaultTimezoneOffset:Float = 0;
+	static private var _dummyDate:Date;
 	
 	static public var inited:Bool = false;
 	public static function init():Void
 	{
 		if (inited) return;
+		
+		_dummyDate = Date.now();
+		_initTimeUtc = _dummyDate.getTime();
+		_startTimer = Lib.getTimer();
+		
+		#if (flash || js)
+			_defaultTimezoneOffset = untyped _dummyDate.getTimezoneOffset();
+			timezoneOffset = _defaultTimezoneOffset;
+		#end
+		
 		inited = true;
-		EnterFrame.add(OnTick);
-	}	
-	
-	static private function OnTick():Void
-	{
-		// clear now data
-		_nowDate = null;
-		if (!pause){
-			_nowTime = null;
-		}
 	}
 	
-	public static function now():Date
+	
+	public static function localToGlobal(time:Float, ?timezoneOffset:Float):Float
+	{
+		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
+		return time + timezoneOffset * MINUTE;
+	}
+	public static function globalToLocal(time:Float, ?timezoneOffset:Float):Float
+	{
+		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
+		return time - timezoneOffset * MINUTE;
+	}
+	
+	public static function now(?ret:Date):Date
+	{
+		return dateFromTime(nowTimeUtc(), timezoneOffset, ret);
+	}
+	public static function nowInTimezone(timezoneOffset:Float, ?ret:Date):Date
+	{
+		return dateFromTime(nowTimeUtc(), timezoneOffset, ret);
+	}
+	public static function dateFromTime(utcTime:Float, ?timezoneOffset:Float, ?ret:Date) : Date
 	{
 		init();
-		if (_nowDate == null) {
-			if (!pause || _nowTime == null) _nowTime = Date.now().getTime();
-			//_nowTimeWithOffset = _nowTime + timezoneOffset;
-			_nowDate = Date.fromTime(_nowTime + offset);
-		}
+		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
+		utcTime += -(timezoneOffset - _defaultTimezoneOffset) * MINUTE;
 		
-		return _nowDate;
+		#if (flash || js)
+			if (ret == null) ret = _dummyDate;
+			untyped ret.setTime(utcTime);
+			return ret;
+		#else
+			return Date.fromTime(utcTime);
+		#end
 	}
 	
 	public static function nowTime():Float
 	{
 		init();
-		if (!pause || _nowTime == null) {
-			_nowTime = Date.now().getTime();
+		return nowTimeUtc() - timezoneOffset * MINUTE;
+	}
+	public static function nowTimeInTimezone(timezoneOffset:Float):Float
+	{
+		init();
+		return nowTimeUtc() - timezoneOffset * MINUTE;
+	}
+	
+	public static function nowTimeUtc():Float
+	{
+		init();
+		return _initTimeUtc + (pause ? _pausedElapsed : Lib.getTimer() - _startTimer) + offset;
+	}
+	
+	public static function getToday(?timezoneOffset:Float, ?createDate:Bool):Date 
+	{
+		if (timezoneOffset == null) timezoneOffset = GlobalTime.timezoneOffset;
+		var todayTime:Float = nowTimeInTimezone(timezoneOffset);
+		todayTime -= todayTime % DAY;
+		todayTime = localToGlobal(todayTime, timezoneOffset);
+		
+		#if (flash || js)
+		if (createDate){
+			return Date.fromTime(todayTime);
+		}else{
+			untyped _dummyDate.setTime(todayTime);
+			return _dummyDate;
 		}
-		_nowTime += offset;
-		return _nowTime;
+		#else
+			return Date.fromTime(todayTime);
+		#end
 	}
 	
-	static function get_today():Date 
+	static function set_pause(value:Bool):Bool 
 	{
-		var _now:Date = now();
-		var todayTime:Float = _now.getTime() - (timezoneOffset * 60 * 1000);
-		todayTime = Math.floor(todayTime / 1000 / 60 / 60 / 24);
-		todayTime = todayTime * 1000 * 60 * 60 * 24;
-		var todayDate:Date = Date.fromTime(todayTime + (timezoneOffset * 60 * 1000));
-		return todayDate;
-	}
-	
-	static function get_timezoneOffset():Float 
-	{
-		if (_timezoneOffset == null) {
-			var _now:Date = now();
-			_timezoneOffset = Reflect.getProperty(_now, "timezoneOffset");
+		if (pause == value) return value;
+		pause = value;
+		if (value){
+			_pausedElapsed = Lib.getTimer() - _startTimer;
+		}else{
+			_startTimer = Lib.getTimer() - _pausedElapsed;
 		}
-		return _timezoneOffset;
+		return value;
 	}
 	
-	static function get_offset():Float 
+	static function get_defaultTimezoneOffset():Float 
 	{
-		return offset;
-	}
-	
-	static function set_offset(value:Float):Float 
-	{
-		OnTick();
-		return offset = value;
+		return _defaultTimezoneOffset;
 	}
 }

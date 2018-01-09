@@ -5,7 +5,7 @@ package com.imagination.util.fs;
  * ...
  * @author Thomas Byrne
  */
-#if air3
+#if air
 
 
 	typedef FileMode = flash.filesystem.FileMode;

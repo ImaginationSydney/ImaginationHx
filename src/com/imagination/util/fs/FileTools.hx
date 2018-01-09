@@ -1,4 +1,7 @@
 package com.imagination.util.fs;
+import haxe.io.Bytes;
+import haxe.io.BytesData;
+import openfl.utils.ByteArray;
 
 #if sys
 import sys.FileSystem;
@@ -22,6 +25,17 @@ import com.imagination.air.util.EventListenerTracker;
 	{
 		static var temp:FlFile = new FlFile();
 
+		
+		static public function getBytes(path:String) : Bytes
+		{
+			temp.nativePath = path;
+			var stream:FileStream =  new FileStream();
+			stream.open(temp, FileMode.READ);
+			var ret = new BytesData();
+			stream.readBytes(ret);
+			stream.close();
+			return Bytes.ofData(ret);
+		}
 		public static function getContent(path:String):String
 		{
 			temp.nativePath = path;
@@ -82,12 +96,22 @@ import com.imagination.air.util.EventListenerTracker;
 			if(onFail != null) onFail(e.toString());
 		}
 		
-		public static function saveContentAsyncWithConfirm(path:String, content:String, confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
+		public static function saveContentAsyncWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
+			if (confirm == null){
+				confirm = function(str1:String, str2:String) : Bool {
+					return str1 == str2;
+				}
+			}
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {
 				FileTools.getContentAsync(temp, function (savedContent:String) {
-					if (confirm(content, savedContent)) {
+					var pass = false;
+					try{
+						pass = confirm(content, savedContent);
+					}catch (e:Dynamic){}
+					
+					if (pass) {
 						var file:File = new File(path);
 						var temp:File = new File(temp);
 						temp.copyToAsync(file, true);
@@ -119,6 +143,41 @@ import com.imagination.air.util.EventListenerTracker;
 				if (onFail != null) onFail(Std.string(e));
 			}
 		}
+		
+		public static function saveBinary(path:String, binary:ByteArray):Bool
+		{
+			try{
+				temp.nativePath = path;
+				confirmParent(temp);
+				var stream:FileStream =  new FileStream();
+				stream.open(temp, FileMode.WRITE);
+				binary.position = 0;
+				stream.writeBytes(binary);
+				stream.close();
+				return true;
+			}catch (e:Dynamic){
+				return false;
+			}
+		}
+		
+		public static function saveBinaryAsync(path:String, binary:ByteArray, ?onComplete:Void->Void, ?onFail:String->Void):Void
+		{
+			try{
+				temp.nativePath = path;
+				confirmParent(temp);
+				var stream:FileStream =  new FileStream();
+				var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+				listenerTracker.addEventListener(Event.CLOSE, writeSuccessHandler.bind(_, listenerTracker, onComplete) );
+				listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, writeFailHandler.bind(_, listenerTracker, onFail) );
+				stream.openAsync(temp, FileMode.WRITE);
+				binary.position = 0;
+				stream.writeBytes(binary);
+				stream.close();
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(Std.string(e));
+			}
+		}
+		
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
@@ -130,9 +189,25 @@ import com.imagination.air.util.EventListenerTracker;
 			if(onFail != null) onFail(e.toString());
 		}
 		
+		
+		static public function findExistingPath(paths:Array<String>) : Null<String>
+		{
+			for (path in paths){
+				if (FileTools.exists(path)){
+					return path;
+				}
+			}
+			return null;
+		}
+			
 		static public function exists(path:String) : Bool
 		{
-			temp.nativePath = path;
+			try{
+				temp.nativePath = path;
+			}
+			catch (e:Dynamic) {
+				return false;
+			}
 			return temp.exists;
 		}
 		
@@ -142,11 +217,17 @@ import com.imagination.air.util.EventListenerTracker;
 			temp.moveTo(new FlFile(newPath));
 			return temp.exists;
 		}
-		inline public static function deleteFile(path : String):Void
+		inline public static function deleteFile(path : String) : Bool
 		{
-			if (!exists(path)) return;
-			temp.nativePath = path;
-			temp.deleteFile();
+			if (!exists(path)) return true;
+			try{
+				temp.nativePath = path;
+				temp.deleteFile();
+				return true;
+			}catch (e:Dynamic){
+				// failed to delete
+				return false;
+			}
 		}
 		
 		static public function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void
@@ -154,6 +235,30 @@ import com.imagination.air.util.EventListenerTracker;
 			if (!exists(path)) return;
 			temp.nativePath = path;
 			temp.deleteDirectory(deleteDirectoryContents);
+		}
+		
+		static public function deleteDirectoryAsync(path : String, deleteDirectoryContents:Bool = false, ?onComplete:Bool->Void) :Void
+		{
+			if (!exists(path)) return;
+			temp.nativePath = path;
+			if (onComplete != null){
+				var eventTracker = new EventListenerTracker(temp);
+				eventTracker.addEventListener(Event.COMPLETE, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(false);
+				});
+				eventTracker.addEventListener(IOErrorEvent.IO_ERROR, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(false);
+				});
+			}
+			try{
+				temp.deleteDirectoryAsync(deleteDirectoryContents);
+			}catch (e:Dynamic){
+				if (onComplete != null){
+					onComplete(false);
+				}
+			}
 		}
 		
 		static public function createDirectory(path : String) :Void
@@ -167,6 +272,13 @@ import com.imagination.air.util.EventListenerTracker;
 			temp.nativePath = path;
 			return temp.isDirectory;
 		}
+		
+		static public function platformPathToUri(path:String) : String
+		{
+			temp.nativePath = path;
+			return temp.url;
+		}
+		
 		
 		
 		

@@ -1,7 +1,10 @@
 package com.imagination.util.app;
+import com.imagination.core.type.Notifier;
 import com.imagination.util.app.AppExit.ExitContinue;
+import com.imagination.util.window.AppWindows;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
+import haxe.xml.Fast;
 
 #if openfl
 import openfl.Lib;
@@ -21,21 +24,36 @@ import js.html.Event;
  * ...
  * @author Thomas Byrne
  */
-@:access(com.imagination.util.app.AppWindows)
+@:access(com.imagination.util.window.AirAppWindows)
 class App
 {
+	@:isVar static public var focused(get, null):Notifier<Bool>;
+	static function get_focused():Notifier<Bool> 
+	{
+		setup();
+		return focused;
+	}
+	
 	static private var appId:String;
+	static private var appExe:String;
 	static private var version:String;
 	static private var appFilename:String;
 	
-	#if flash
-	@:isVar static public var windows(get, null):AppWindows = new AppWindows();
+	static public var windows(get, null):AppWindows;
 	static function get_windows():AppWindows 
 	{
-		checkManifest();
-		return windows;
+		setup();
+		return nativeWindows;
 	}
-	#elseif js
+	
+	@:isVar static public var nativeWindows(get, null):NativeAppWindows;
+	static function get_nativeWindows():NativeAppWindows 
+	{
+		setup();
+		return nativeWindows;
+	}
+	
+	#if js
 	@:isVar static public var appElement(get, null):js.html.Element;
 	static function get_appElement():js.html.Element 
 	{
@@ -69,7 +87,37 @@ class App
 		if (isSetup) return;
 		isSetup = true;
 		
+		focused = new Notifier(false);
+		
+		App.nativeWindows = new NativeAppWindows();
+		App.windows.foreach(onWindowAdd, onWindowRemove);
+		
+		checkManifest();
+		
 		AppExit.setup();
+	}
+	
+	static private function onWindowRemove(window:AppWindow) 
+	{
+		window.focused.change.add(onWindowFocusChanged);
+		onWindowFocusChanged();
+	}
+	static private function onWindowAdd(window:AppWindow) 
+	{
+		window.focused.change.add(onWindowFocusChanged);
+		if (window.focused.value) focused.value = true;
+	}
+	
+	static private function onWindowFocusChanged() 
+	{
+		var focused:Bool = false;
+		for (window in windows.list){
+			if (window.focused.value){
+				focused = true;
+				break;
+			}
+		}
+		App.focused.value = focused;
 	}
 	
 	static public function exit(errorCode:Int = 0) 
@@ -98,6 +146,22 @@ class App
 		AppExit.removeExitCleanup(handler);
 	}
 	
+	#if flash
+	static public function getAppExe() 
+	{
+		if (appExe != null) return appExe;
+		
+		var appDir = flash.filesystem.File.applicationDirectory;
+		checkManifest();
+		appExe = appDir.resolvePath(appFilename + ".exe").nativePath;
+		return appExe;
+	}
+	static public function getAppDir() 
+	{
+		return flash.filesystem.File.applicationDirectory.nativePath;
+	}
+	#end
+	
 	static private function checkManifest() 
 	{
 		if (appId != null) return;
@@ -120,7 +184,6 @@ class App
 			version = versionNode.next().firstChild().nodeValue;
 			break;
 		}
-		windows.checkManifest(appXml);
 		
 		#elseif openfl
 			var stage:Stage = Lib.current.stage;

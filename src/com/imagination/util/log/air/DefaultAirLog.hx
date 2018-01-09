@@ -31,14 +31,16 @@ class DefaultAirLog
 		
 		// Must be runtime conditional because of SWC packaging
 		//if(Capabilities.isDebugger){
+		#if debug
 			Log.mapHandler(new TraceLogger(LogFormatImpl.fdFormat), Log.ALL_LEVELS);
+		#end
 		//}
 		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "log", true), Log.ALL_LEVELS);
+		Log.mapHandler(new HtmlFileLogger(docsDir + "log" + Files.slash(), true), Log.ALL_LEVELS);
 		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
+		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
 		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog", false), [LogLevel.CRITICAL_ERROR]);
+		//Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.CRITICAL_ERROR]);
 		
 		Log.mapHandler(new MassErrorQuitLogger(), [LogLevel.UNCAUGHT_ERROR, LogLevel.CRITICAL_ERROR]);
 		
@@ -49,11 +51,13 @@ class DefaultAirLog
 		CustomTrace.install();
 	}
 	
+	#if raven
 	public static function installSentry(sentryDsn:String, ?terminalName:String):Void
 	{
 		if(terminalName==null)Logger.log(DefaultAirLog, "No 'terminalName' found, will track using IP address (set this up with global config in ~/Docs/imagination/_global/config.json)");
 		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR, LogLevel.WARN]);
 	}
+	#end
 	
 	
 	public static function installIdmLog():Void

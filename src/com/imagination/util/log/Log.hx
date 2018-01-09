@@ -51,6 +51,7 @@ class Log
 		#end
 		
 		var handlerList:Array<ILogHandler> = handlers.get(level);
+		if (handlerList == null) return;
 		for(logger in handlerList) {
 			logger.log(source, level, rest, time);
 		}

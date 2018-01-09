@@ -1,18 +1,8 @@
 package com.imagination.util.log.air;
-import com.imagination.delay.EnterFrame;
 import com.imagination.util.fs.FileTools;
 import com.imagination.util.fs.Files;
-import com.imagination.util.time.GlobalTime;
-import com.imagination.worker.ext.FileSysTasks;
-import com.imagination.util.log.Log.LogLevel;
 import com.imagination.worker.WorkerSwitchboard;
-import flash.events.Event;
 import flash.filesystem.File;
-import flash.filesystem.FileMode;
-import flash.filesystem.FileStream;
-import flash.Lib;
-import haxe.Timer;
-import haxe.crypto.Md5;
 
 using com.imagination.worker.ext.FileSysTasks;
 using Logger;
@@ -72,7 +62,7 @@ class SimpleJsonLogger implements ILogHandler
 		#end
 		
 		var msg = rest.join("\n\n");
-		var hash = Md5.encode(msg);
+		var hash = haxe.crypto.Md5.encode(msg);
 		msg = jsonEscape(msg);
 		var ts = time.getTime();
 		msg = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg +  '",\n\t"timezoneOffset":' + timezoneOffset + '\n}';

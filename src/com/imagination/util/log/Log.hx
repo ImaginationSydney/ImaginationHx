@@ -1,6 +1,6 @@
 package com.imagination.util.log;
 
-#if !macro
+#if !(macro || sys)
 	import com.imagination.util.time.GlobalTime;
 #end
 
@@ -44,13 +44,14 @@ class Log
 		var params:Array<Dynamic> = [source, level];
 		params = params.concat(rest);
 		
-		#if macro
+		#if(macro || sys)
 			var time:Date = Date.now();
 		#else
 			var time:Date = GlobalTime.now();
 		#end
 		
 		var handlerList:Array<ILogHandler> = handlers.get(level);
+		if (handlerList == null) return;
 		for(logger in handlerList) {
 			logger.log(source, level, rest, time);
 		}

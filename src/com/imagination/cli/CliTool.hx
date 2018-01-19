@@ -4,7 +4,6 @@ import com.imagination.cli.ops.IOp;
 import com.imagination.cli.OpArg;
 import com.imagination.cli.utils.PrintTools;
 import com.imagination.util.log.cli.DefaultCliLog;
-import haxe.ds.StringMap;
 import sys.FileSystem;
 
 /**
@@ -14,7 +13,7 @@ import sys.FileSystem;
 class CliTool
 {
 	private var opNames:Array<String>;
-	private var opMap:StringMap<IOp>;
+	private var opMap:Map<String, IOp>;
 	
 	private var options:CliToolOptions;
 	
@@ -32,7 +31,7 @@ class CliTool
 		#end
 		DefaultCliLog.install();
 		
-		opMap = new StringMap();
+		opMap = new Map();
 		opNames = [];
 		
 		addOps();
@@ -48,7 +47,7 @@ class CliTool
 		
 		var pendingOp:IOp = null;
 		var pendingArgs:Array<String> = [];
-		var pendingVars:Map<String, String> = new StringMap();
+		var pendingVars:Map<String, String> = new Map();
 		var pendingVarName:String = null;
 		
 		var args = Sys.args();
@@ -85,7 +84,7 @@ class CliTool
 				executePending(pendingOp, pendingArgs, pendingVars, pendingVarName);
 				pendingOp = null;
 				pendingArgs = [];
-				pendingVars = new StringMap();
+				pendingVars = new Map();
 				
 			}else if (pendingVarName != null) {
 				pendingVars.set(pendingVarName, arg);

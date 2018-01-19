@@ -115,15 +115,49 @@ class PrintTools
 			}
 			var chars:String = input.readString(1);
 			if (chars == null || chars.length == 0){
-				Sys.sleep(50);
+				Sys.sleep(0.25);
+				continue;
 			}
 			chars = chars.toUpperCase();
 			if (chars == "N") return false;
 			if (chars == "Y") return true;
 			
-			Sys.sleep(50);
+			Sys.sleep(0.25);
 		}
 		return false;
+	}
+	
+	static public function select(msg:String, options:Array<String>, ?timeout:Float) : Int
+	{
+		print(msg);
+		for (i in 0 ... options.length){
+			print((i + 1)+") " + options[i]);
+		}
+		
+		var input = Sys.stdin();
+		var i = 0;
+		var chars:String = "";
+		while (true){
+			i += 500;
+			if (timeout!=null && i > timeout * 1000){
+				return -1;
+			}
+			var read:String = input.readString(1);
+			if (read != null) chars = chars + read;
+			
+			if (chars.charAt(chars.length - 1) != "\n"){
+				Sys.sleep(0.25);
+				continue;
+			}
+			var index = Std.parseInt(chars);
+			index -= 1;
+			if (index >= 0 && index < options.length){
+				return index;
+			}
+			chars = "";
+			Sys.sleep(0.25);
+		}
+		return -1;
 	}
 	
 }

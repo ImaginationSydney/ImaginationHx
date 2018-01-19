@@ -1,11 +1,11 @@
 package com.imagination.util.fs;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
-import openfl.utils.ByteArray;
 
 #if sys
 import sys.FileSystem;
 #else
+import openfl.utils.ByteArray;
 import com.imagination.air.util.EventListenerTracker;
 #end
 

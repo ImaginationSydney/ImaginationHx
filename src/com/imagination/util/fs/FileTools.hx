@@ -71,17 +71,36 @@ import com.imagination.air.util.EventListenerTracker;
 			stream.close();
 		}
 		
+		public static function getBinaryAsync(path:String, onComplete:Bytes->Void, ?onFail:String->Void):Void
+		{
+			temp.nativePath = path;
+			var stream:FileStream =  new FileStream();
+			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandlerBytes.bind(_, stream, listenerTracker, onComplete) );
+			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, readFailHandler.bind(_, stream, listenerTracker, onFail) );
+			stream.openAsync(temp, FileMode.READ);
+		}
+		
+		static private function readSuccessHandlerBytes(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:Bytes->Void):Void 
+		{
+			listenerTracker.removeAllEventListeners();
+			var ret:BytesData = new BytesData(); 
+			stream.readBytes(ret, 0, stream.bytesAvailable);
+			stream.close();
+			onComplete(Bytes.ofData(ret));
+		}
+		
 		public static function getContentAsync(path:String, onComplete:String->Void, ?onFail:String->Void):Void
 		{
 			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
 			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
-			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandler.bind(_, stream, listenerTracker, onComplete) );
+			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandlerStr.bind(_, stream, listenerTracker, onComplete) );
 			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, readFailHandler.bind(_, stream, listenerTracker, onFail) );
 			stream.openAsync(temp, FileMode.READ);
 		}
 		
-		static private function readSuccessHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
+		static private function readSuccessHandlerStr(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
 			var ret:String = stream.readUTFBytes(stream.bytesAvailable);
@@ -277,6 +296,12 @@ import com.imagination.air.util.EventListenerTracker;
 		{
 			temp.nativePath = path;
 			return temp.url;
+		}
+		
+		static public function uriToPlatformPath(path:String) : String
+		{
+			temp.url = path;
+			return temp.nativePath;
 		}
 		
 		

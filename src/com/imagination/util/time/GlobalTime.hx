@@ -4,6 +4,7 @@ package com.imagination.util.time;
  * ...
  * @author P.J.Shand
  */
+#if !sys
 class GlobalTime
 {
 	static public var offset:Float = 0;
@@ -13,10 +14,8 @@ class GlobalTime
 	static private var _nowTimeWithOffset:Null<Float>;
 	static private var init:Void -> Void = RealInit;
 	
-	public function new() { }
-	
-	public static inline function EmptyInit():Void { }	
-	public static inline function RealInit():Void
+	static inline function EmptyInit():Void { }	
+	static inline function RealInit():Void
 	{
 		EnterFrame.add(OnTick);
 		init = EmptyInit;
@@ -53,3 +52,24 @@ class GlobalTime
 		return _nowTime;
 	}
 }
+#else
+class GlobalTime
+{
+	static public var offset:Float = 0;
+	
+	public static function now():Date
+	{
+		var now = Date.now();
+		if (offset != 0){
+			return Date.fromTime(now.getTime() + offset);
+		}else{
+			return now;
+		}
+	}
+	
+	public static function nowTime():Float
+	{
+		return Date.now().getTime();
+	}
+}
+#end

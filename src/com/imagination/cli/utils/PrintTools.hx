@@ -61,7 +61,7 @@ class PrintTools
 			switch(style){
 				case ERROR:
 					textColor = Red;
-					forceUpper = true;
+					//forceUpper = true;
 					
 				case HELP:
 					textColor = White;
@@ -76,7 +76,7 @@ class PrintTools
 					
 				case WARNING:
 					textColor = LightYellow;
-					forceUpper = true;
+					//forceUpper = true;
 					
 				case MENU_HEADING:
 					textColor = LightBlue;

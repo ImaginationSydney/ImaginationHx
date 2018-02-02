@@ -1,4 +1,5 @@
 package com.imagination.util.fs;
+import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
 import openfl.utils.ByteArray;
@@ -59,6 +60,11 @@ import com.imagination.air.util.EventListenerTracker;
 			else {
 				//trace("failed to save content to: " + path);
 			}
+		}
+		
+		public static function saveObject(path:String, object:Dynamic):Void
+		{
+			saveContent(path, Json.stringify(object));
 		}
 		
 		public static function saveContent(path:String, content:String):Void

@@ -106,7 +106,7 @@ class LogFormatImpl
 		while (ret.length < length) ret = "0" + ret;
 		return ret;
 	}
-	static private function padStr(str:String, length:Int):String 
+	static private function padStr(str:String, length:Int, ?atFront:Bool):String 
 	{
 		// This is optimised because string appending loop triggers garbage collection, better to cache the amount of spaces needed.
 		var short = length - str.length;
@@ -122,7 +122,7 @@ class LogFormatImpl
 			}
 			padList[short] = pad;
 		}
-		return str + padList[short];
+		return atFront ? padList[short] + str : str + padList[short];
 	}
 	
 	public static function fdFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
@@ -130,27 +130,27 @@ class LogFormatImpl
 		var colorCode:String;
 		switch(level) {
 			case LogLevel.INFO:
-				colorCode = "0:";
+				colorCode = "Info:";
 				
 			case LogLevel.WARN:
-				colorCode = "2:";
+				colorCode = "Warning:";
 				
 			case LogLevel.ERROR:
-				colorCode = "3:";
+				colorCode = "Error:";
 				
 			case LogLevel.CRITICAL_ERROR:
-				colorCode = "3";
+				colorCode = "Fatal:";
 				
 			case LogLevel.UNCAUGHT_ERROR:
-				colorCode = "4:";
+				colorCode = "Error:";
 				
 			default: // | LogLevel.LOG:
-				colorCode = "1:";
+				colorCode = "Info:";
 		}
 		
 		var msg = rest.join(" ");
 		msg = msg.split("\n").join("\n"+colorCode);
-		return colorCode + padStr(getType(source), 35)+" " + msg;
+		return colorCode + padStr(getType(source), 35 - colorCode.length, true)+" " + msg;
 	}
 	
 	public static function getType(source:Dynamic):String

@@ -145,7 +145,7 @@ class LogFormatImpl
 				colorCode = "Error:";
 				
 			default: // | LogLevel.LOG:
-				colorCode = "Info:";
+				colorCode = "";
 		}
 		
 		var msg = rest.join(" ");

@@ -23,8 +23,12 @@ import com.imagination.air.util.EventListenerTracker;
 	
 	class FileTools
 	{
-		static var temp:FlFile = new FlFile();
-
+		static var temp:FlFile;
+		
+		static function __init__():Void
+		{
+			temp = new FlFile();
+		}
 		
 		static public function getBytes(path:String) : Bytes
 		{

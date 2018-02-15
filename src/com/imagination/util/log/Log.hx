@@ -15,6 +15,9 @@ class Log
 	static public var ALL_LEVELS:Array<String> = [LogLevel.INFO, LogLevel.LOG, LogLevel.WARN, LogLevel.ERROR, LogLevel.CRITICAL_ERROR, LogLevel.UNCAUGHT_ERROR];
 	
 	private static var handlers:Map<String, Array<ILogHandler>>;
+	
+	static public var hasHandlers(get, null):Bool;
+	static var handlerCount:Int = 0;
 
 	/**
 	 * Set exclusiveSource to an object to ignore any log events from other objects.
@@ -60,6 +63,7 @@ class Log
 	public static function mapHandler(handler:ILogHandler, levels:Array<String>):Void {
 		setup();
 		
+		handlerCount++;
 		for(level in levels){
 			mapHandlerToLevel(handler, level);
 		}
@@ -74,6 +78,11 @@ class Log
 		}else{
 			list.push(handler);
 		}
+	}
+	
+	static function get_hasHandlers():Bool 
+	{
+		return handlerCount > 0;
 	}
 	
 }

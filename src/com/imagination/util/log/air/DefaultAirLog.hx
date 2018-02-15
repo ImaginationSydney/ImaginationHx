@@ -6,7 +6,10 @@ import com.imagination.util.log.Log.LogLevel;
 import com.imagination.util.log.customTrace.CustomTrace;
 import flash.display.DisplayObject;
 import flash.errors.Error;
+import flash.events.PermissionEvent;
 import flash.events.UncaughtErrorEvent;
+import flash.filesystem.File;
+import flash.permissions.PermissionStatus;
 import flash.system.Capabilities;
 
 /**
@@ -21,26 +24,16 @@ class DefaultAirLog
 					];
 					
 	private static var restartRequested:Bool;
+	private static var permissionFile:File;
 	
 	public static function install(root:DisplayObject, ?restartApp:Void->Void):Void
 	{
 		if (installed) return;
 		installed = true;
 		
-		var docsDir:String  = Files.appDocsDir();
-		
-		// Must be runtime conditional because of SWC packaging
-		//if(Capabilities.isDebugger){
 		#if debug
 			Log.mapHandler(new TraceLogger(LogFormatImpl.fdFormat), Log.ALL_LEVELS);
 		#end
-		//}
-		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "log" + Files.slash(), true), Log.ALL_LEVELS);
-		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
-		
-		//Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.CRITICAL_ERROR]);
 		
 		Log.mapHandler(new MassErrorQuitLogger(), [LogLevel.UNCAUGHT_ERROR, LogLevel.CRITICAL_ERROR]);
 		
@@ -48,7 +41,38 @@ class DefaultAirLog
 		
 		root.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError.bind(_, restartApp));
 		
-		CustomTrace.install();
+		checkFilePermission(null);
+	}
+	
+	static private function checkFilePermission(e:PermissionEvent) 
+	{
+		if (File.permissionStatus == PermissionStatus.GRANTED){
+			installFileLoggers();
+		}else{
+			if (File.permissionStatus == PermissionStatus.DENIED){
+				// Add listener anyway as overlapping 'requestPermission' calls can sometimes report 'denied' while user is being prompted
+				Logger.warn(DefaultAirLog, "Failed to install AIR file loggers, file permission was denied");
+			}
+			if (permissionFile == null){
+				permissionFile = new File();
+				permissionFile.addEventListener(PermissionEvent.PERMISSION_STATUS, checkFilePermission);
+				Reflect.field(permissionFile, "requestPermission")();
+			}
+		}
+	}
+	
+	static function installFileLoggers() 
+	{
+		if (permissionFile != null){
+			permissionFile.removeEventListener(PermissionEvent.PERMISSION_STATUS, checkFilePermission);
+			permissionFile = null;
+		}
+		
+		var docsDir:String  = Files.appDocsDir();
+		
+		Log.mapHandler(new HtmlFileLogger(docsDir + "log" + Files.slash(), true), Log.ALL_LEVELS);
+		
+		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
 	}
 	
 	#if raven

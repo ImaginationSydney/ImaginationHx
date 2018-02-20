@@ -125,6 +125,7 @@ class LogFormatImpl
 		return atFront ? padList[short] + str : str + padList[short];
 	}
 	
+	static var maxLength:Int = 25;
 	public static function fdFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
 		var colorCode:String;
@@ -149,8 +150,11 @@ class LogFormatImpl
 		}
 		
 		var msg = rest.join(" ");
-		msg = msg.split("\n").join("\n"+colorCode);
-		return colorCode + padStr(getType(source), 35 - colorCode.length, true)+" " + msg;
+		msg = msg.split("\n").join("\n" + colorCode);
+		var sourceStr = getType(source);
+		var length:Int = sourceStr.length + colorCode.length;
+		if (length > maxLength) maxLength = length;
+		return colorCode + padStr(sourceStr, maxLength - colorCode.length, true)+" | " + msg;
 	}
 	
 	public static function getType(source:Dynamic):String

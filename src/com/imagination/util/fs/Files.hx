@@ -11,7 +11,12 @@ import openfl.display.BitmapData;
 #if !html5
 class Files
 {
-	static var tempFile:File = new File();
+	static var tempFile:File;
+
+	static function __init__():Void
+	{
+		tempFile = new File();
+	}
 	
 	public static inline function slash():String 
 	{

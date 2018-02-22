@@ -16,8 +16,6 @@ class DefaultJsLog
 		Log.mapHandler(new ConsoleLogger(), Log.ALL_LEVELS);
 		
 		Log.mapHandler(new ReloadPageLogger(), [LogLevel.CRITICAL_ERROR]);
-		
-		CustomTrace.install();
 	}
 	
 }

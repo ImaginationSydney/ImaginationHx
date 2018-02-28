@@ -9,12 +9,20 @@ import com.imagination.util.signals.Signal.Signal1;
 
 typedef NativeAppWindows = JsAppWindows;
 typedef NativeAppWindow = com.imagination.util.window.JsAppWindows.JsAppWindow;
-@:forward(createSupported, hideSupported, hideAll, closeAll, exit, foreach, lastWindowClosing)
-#else
+@:forward(createSupported, hideSupported, hideAll, closeAll, exit, lastWindowClosing)
+
+#elseif air
 
 typedef NativeAppWindows = AirAppWindows;
 typedef NativeAppWindow = com.imagination.util.window.AirAppWindows.AirAppWindow;
-@:forward(createSupported, hideSupported, hideAll, closeAll, exit, foreach, lastWindowClosing)
+@:forward(createSupported, hideSupported, hideAll, closeAll, exit, lastWindowClosing)
+
+#elseif (lime || openfl)
+
+typedef NativeAppWindows = LimeAppWindows;
+typedef NativeAppWindow = com.imagination.util.window.LimeAppWindows.LimeAppWindow;
+@:forward(createSupported, hideSupported, hideAll, closeAll, exit, lastWindowClosing)
+
 #end
 
 abstract AppWindows(NativeAppWindows) from NativeAppWindows
@@ -72,4 +80,12 @@ typedef MouseInfo =
 	stageX:Float,
 	stageY:Float,
 	shift:Bool,
+}
+
+
+@:enum
+abstract WindowDisplayState(String){
+	var MAXIMIZED = "maximized";
+	var MINIMIZED = "minimized";
+	var NORMAL = "normal";
 }

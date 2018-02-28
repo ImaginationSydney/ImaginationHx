@@ -13,7 +13,7 @@ import com.imagination.air.util.EventListenerTracker;
  * ...
  * @author Thomas Byrne
  */
-#if flash
+#if air
 
 	import flash.filesystem.File as FlFile;
 	import flash.filesystem.FileStream;
@@ -330,18 +330,30 @@ import com.imagination.air.util.EventListenerTracker;
 		{
 			return sys.io.File.getContent(path);
 		}
-		public static function getContentAsync(path:String, onComplete:String->Void):Void
+		public static function getContentAsync(path:String, onComplete:String->Void, ?onFail:String->Void):Void
 		{
-			onComplete(sys.io.File.getContent(path));
+			var data:String;
+			try{
+				data = sys.io.File.getContent(path);
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(e);
+				return;
+			}
+			onComplete(data);
 		}
 		public inline static function saveContent(path:String, content:String):Void
 		{
 			return sys.io.File.saveContent(path, content);
 		}
-		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void):Void
+		public static function saveContentAsync(path:String, content:String, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			sys.io.File.saveContent(path, content);
-			onComplete();
+			try{
+				sys.io.File.saveContent(path, content);
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(e);
+				return;
+			}
+			if(onComplete != null) onComplete();
 		}
 		inline public static function exists(path:String):Bool
 		{

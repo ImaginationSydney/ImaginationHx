@@ -29,7 +29,7 @@ class DesktopPlatform
 		
 		#if sys
 		var os = Sys.systemName();
-		#else
+		#elseif openfl
 		var os = Capabilities.os;
 		#end
 		
@@ -52,10 +52,10 @@ class DesktopPlatform
 			_systemName = SystemName.Other;
 		}
 		
-		#if sys
-		_is64Bit = _isMac;
-		#else 
+		#if openfl
 		_is64Bit = Capabilities.supports64BitProcesses;
+		#else 
+		_is64Bit = _systemName == SystemName.Mac;
 		#end
 	}
 	

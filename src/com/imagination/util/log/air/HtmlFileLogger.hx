@@ -79,6 +79,31 @@ class HtmlFileLogger implements ILogHandler
 			targetFileDate = now.getDate();
 			targetFileCount++;
 		}
+		
+		var header = "<script>
+						var levels = {};
+						function toggleShown(level){
+							var shown = levels[level] == null ? false : !levels[level];
+							levels[level] = shown;
+							var elems = document.getElementsByClassName('loglevel_' + level);
+							for(var i=0; i<elems.length; i++) elems[i].style.display = shown ? 'block' : 'none';
+							var elem = document.getElementById('levelbtn_' + level);
+							elem.style.opacity = shown ? '1' : '0.25';
+						}
+					</script>";
+		
+		header += "<code><div style='position:absolute; top:0; right:0;'>";
+		
+		for (level in Log.ALL_LEVELS){
+			var title:String = LogFormatImpl.getLevelTitle(level);
+			var color:String = LogFormatImpl.getHtmlColor(level);
+			header += '<span id="levelbtn_$level" onclick="toggleShown(\'$level\')" style="margin: 3px; padding: 3px; display: inline-block; background: #$color; color: white; cursor: pointer">$title</span>';
+		}
+		header += "</div></code>";
+		
+		isWriting = true;
+		workerSwitch.appendTextToFile(targetFile.nativePath, header, onWriteSuccess);
+		
 		if (lastFile!=null && lastFile.exists && lastFile.size < MAX_LOG_SIZE) {
 			Logger.warn(this, "Last log file is smaller than 2mb, possibly from crash");
 		}

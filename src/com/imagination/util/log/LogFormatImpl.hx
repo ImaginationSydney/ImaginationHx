@@ -43,32 +43,36 @@ class LogFormatImpl
 	
 	public static function htmlFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
 	{
-		var color:String;
-		switch(level) {
-			case LogLevel.INFO:
-				color = "444";
-				
-			case LogLevel.WARN:
-				color = "e59400";
-				
-			case LogLevel.ERROR:
-				color = "f00";
-				
-			case LogLevel.CRITICAL_ERROR:
-				color = "f00";
-				
-			case LogLevel.UNCAUGHT_ERROR:
-				color = "d00";
-				
-			default: // | LogLevel.LOG:
-				color = "000";
-		}
+		var color:String = getHtmlColor(level);
 		var timestamp:String = padNum(time.getHours(), 2) + ":" + padNum(time.getMinutes(), 2) + ":" + padNum(time.getSeconds(), 2);
 		var content = StringTools.htmlEscape(rest.join(" "));
 		var msg:String = '<div style="color:#fff;background:#'+color+';min-width: 350px;display:inline-block;">'+timestamp+" "+getType(source)+"</div> " + content;
 		msg = msg.split("\n").join("<br/>");
 		msg = msg.split("\t").join("&nbsp;&nbsp;&nbsp;&nbsp;");
-		return "<div><code style='font-size:12px;white-space:pre;color:#"+color+"'>" + msg + "</code></div>";
+		return "<div class='logentry loglevel_" + level + "'><code style='font-size:12px;white-space:pre;color:#"+color+"'>" + msg + "</code></div>";
+	}
+	
+	static public function getHtmlColor(level:String) :String
+	{
+		switch(level) {
+			case LogLevel.INFO:
+				return "444";
+				
+			case LogLevel.WARN:
+				return "e59400";
+				
+			case LogLevel.ERROR:
+				return "f00";
+				
+			case LogLevel.CRITICAL_ERROR:
+				return "f00";
+				
+			case LogLevel.UNCAUGHT_ERROR:
+				return "d00";
+				
+			default: // | LogLevel.LOG:
+				return "000";
+		}
 	}
 	
 	public static function flashHtmlFormat(source:Dynamic, level:String, rest:Array<Dynamic>, time:Date):String
@@ -170,6 +174,33 @@ class LogFormatImpl
 			}else {
 				return source.toString();
 			}
+		}
+	}
+	
+	static public function getLevelTitle(level:String) : String 
+	{
+	
+		switch(level) {
+			case LogLevel.INFO:
+				return 'Info';
+				
+			case LogLevel.WARN:
+				return "Warnings";
+				
+			case LogLevel.ERROR:
+				return "Errors";
+				
+			case LogLevel.CRITICAL_ERROR:
+				return "Critical Errors";
+				
+			case LogLevel.UNCAUGHT_ERROR:
+				return 'Uncaught Errors';
+				
+			case LogLevel.LOG:
+				return 'Log';
+				
+			default:
+				return level;
 		}
 	}
 	

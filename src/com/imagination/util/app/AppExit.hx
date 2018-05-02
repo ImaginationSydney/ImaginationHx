@@ -111,7 +111,6 @@ class AppExit
 			if (callingExit){
 				cancel();
 			}
-			trace("callingExit: " + callingExit);
 			return !callingExit;
 		}else{
 			finaliseExit(exitCode);

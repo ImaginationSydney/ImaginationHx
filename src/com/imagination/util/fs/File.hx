@@ -36,8 +36,11 @@ import openfl.net.SharedObject;
 			sys.FileSystem.deleteFile(this);
 		}
 		
-		public function deleteDirectory():Void
+		public function deleteDirectory(deleteDirectoryContents : Bool=false):Void
 		{
+			if (!deleteDirectoryContents && getDirectoryListing().length > 0){
+				throw "Cannot delete directory with contents";
+			}
 			sys.FileSystem.deleteDirectory(this);
 		}
 		

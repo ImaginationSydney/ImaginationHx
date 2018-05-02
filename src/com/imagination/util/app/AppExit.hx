@@ -1,5 +1,5 @@
 package com.imagination.util.app;
-import com.imagination.delay.Delay;
+import com.imagination.util.time.Timer;
 import com.imagination.util.window.AppWindows.AppWindow;
 
 #if openfl
@@ -134,7 +134,7 @@ class AppExit
 						onCleanupDone(exitCode);
 					}
 				}
-				if(callingExit) Delay.byTime(10, finaliseExit.bind(exitCode)); // Give cleanups a maximum of 10 seconds to run
+				if(callingExit) Timer.setTimeout(finaliseExit.bind(exitCode), 10000); // Give cleanups a maximum of 10 seconds to run
 			}
 			
 		}else {

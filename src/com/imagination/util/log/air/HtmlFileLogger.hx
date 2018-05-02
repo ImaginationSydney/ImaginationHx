@@ -72,6 +72,8 @@ class HtmlFileLogger implements ILogHandler
 	{
 		var now:Date = GlobalTime.now();
 		var lastFile:File = null;
+		if (_nowDate != null && now.getDate() != _nowDate.getDate()) targetFileCount = 0;
+		
 		while (targetFile==null || targetFile.exists) {
 			lastFile = targetFile;
 			var fileName:String = toDateString(now) + (targetFileCount>0 ? "_"+pad(targetFileCount, 2) : "") + "." + fileExt;
@@ -107,6 +109,8 @@ class HtmlFileLogger implements ILogHandler
 		if (lastFile!=null && lastFile.exists && lastFile.size < MAX_LOG_SIZE) {
 			Logger.warn(this, "Last log file is smaller than 2mb, possibly from crash");
 		}
+		
+		_nowDate = now;
 	}
 	
 	function toDateString(date:Date) : String 

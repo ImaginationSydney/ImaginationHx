@@ -1,9 +1,9 @@
 package com.imagination.util.log.air;
-import com.imagination.delay.Delay;
 import com.imagination.util.app.App;
 import com.imagination.util.fs.Files;
 import com.imagination.util.log.Log.LogLevel;
 import com.imagination.util.log.customTrace.CustomTrace;
+import com.imagination.util.time.EnterFrame;
 import flash.display.DisplayObject;
 import flash.errors.Error;
 import flash.events.UncaughtErrorEvent;
@@ -86,7 +86,7 @@ class DefaultAirLog
 			
 			if (!restartRequested && restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
 				Logger.error(e.target, "Critical error "+err.errorID+" caught, attempting restart");
-				Delay.byFrames(1, restartApp);
+				EnterFrame.delay(restartApp);
 				restartRequested = true;
 			}
 		}else {

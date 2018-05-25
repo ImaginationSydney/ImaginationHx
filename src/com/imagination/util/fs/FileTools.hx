@@ -1,4 +1,5 @@
 package com.imagination.util.fs;
+import com.imagination.util.data.JSON;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
 
@@ -8,6 +9,8 @@ import sys.FileSystem;
 import openfl.utils.ByteArray;
 import com.imagination.air.util.EventListenerTracker;
 #end
+
+using StringTools;
 
 /**
  * ...
@@ -23,6 +26,11 @@ import com.imagination.air.util.EventListenerTracker;
 	
 	class FileTools
 	{
+		static public var DEFAULT_WRITE_CONFIRM:String -> String -> Bool = function(str1:String, str2:String) : Bool return str1 == str2;
+		static public var DEFAULT_READ_CONFIRM:String -> Bool = function(str:String) : Bool return str != "";
+		
+		static public var JSON_READ_CONFIRM:String -> Bool = function(str:String) : Bool try { JSON.parse(str); return true; } catch (e:Dynamic){ return false; };
+		
 		static var temp:FlFile;
 		
 		static function __init__():Void
@@ -50,8 +58,30 @@ import com.imagination.air.util.EventListenerTracker;
 			return ret;
 		}
 		
-		public static function saveContentWithConfirm(path:String, content:String, confirm:String -> String -> Bool):Void
+		public static function getContentWithConfirm(path:String, ?confirm:String -> Bool):String
 		{
+			if (confirm == null) confirm = DEFAULT_READ_CONFIRM;
+			
+			try{
+				var ret = getContent(path);
+				if (confirm(ret)) return ret;
+			}catch (e:Dynamic){}
+			
+			var temp:String = path + ".tmp";
+			if(exists(temp)){
+				try{
+					var ret = getContent(temp);
+					if (confirm(ret)) return ret;
+				}catch (e:Dynamic){}
+			}
+			
+			return null;
+		}
+		
+		public static function saveContentWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool):Void
+		{
+			if (confirm == null) confirm = DEFAULT_WRITE_CONFIRM;
+			
 			var temp:String = path + ".tmp";
 			saveContent(temp, content);
 			var savedContent:String = getContent(temp);
@@ -121,11 +151,7 @@ import com.imagination.air.util.EventListenerTracker;
 		
 		public static function saveContentAsyncWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			if (confirm == null){
-				confirm = function(str1:String, str2:String) : Bool {
-					return str1 == str2;
-				}
-			}
+			if (confirm == null) confirm = DEFAULT_WRITE_CONFIRM;
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {
 				FileTools.getContentAsync(temp, function (savedContent:String) {
@@ -135,9 +161,13 @@ import com.imagination.air.util.EventListenerTracker;
 					}catch (e:Dynamic){}
 					
 					if (pass) {
-						var file:File = new File(path);
-						var temp:File = new File(temp);
-						temp.copyToAsync(file, true);
+						try{
+							var file:File = new File(path);
+							var temp:File = new File(temp);
+							temp.copyToAsync(file, true);
+						}catch (e:Dynamic){
+							if (onFail != null) onFail(Std.string(e));
+						}
 						if (onComplete != null) onComplete();
 					}
 					else {

@@ -56,7 +56,9 @@ class DefaultAirLog
 			if (permissionFile == null){
 				permissionFile = new File();
 				permissionFile.addEventListener(PermissionEvent.PERMISSION_STATUS, checkFilePermission);
-				Reflect.field(permissionFile, "requestPermission")();
+				var requestPermission:Void->Void = Reflect.field(permissionFile, "requestPermission");
+				if (requestPermission != null) requestPermission();
+				else installFileLoggers();
 			}
 		}
 	}

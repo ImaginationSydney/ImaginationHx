@@ -3,7 +3,6 @@ import com.imagination.util.fs.FileTools;
 import com.imagination.util.fs.Files;
 import com.imagination.worker.WorkerSwitchboard;
 import flash.filesystem.File;
-import haxe.crypto.Md5;
 
 using com.imagination.worker.ext.FileSysTasks;
 using Logger;
@@ -63,7 +62,7 @@ class SimpleJsonLogger implements ILogHandler
 		#end
 		
 		var msg = rest.join("\n\n");
-		var hash = Md5.encode(msg);
+		var hash = haxe.crypto.Md5.encode(msg);
 		msg = jsonEscape(msg);
 		var ts = time.getTime();
 		msg = '{\n\t"source":"' + LogFormatImpl.getType(source) + '",\n\t"level":"' + level + '",\n\t"msg":"' + msg +  '",\n\t"timezoneOffset":' + timezoneOffset + '\n}';

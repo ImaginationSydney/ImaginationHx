@@ -12,6 +12,31 @@ typedef RealPlatform = DesktopPlatform;
 
 class Platform
 {
+	public static function systemName() : SystemName
+	{
+		#if js
+			return null;
+		#else
+			return RealPlatform.systemName();
+		#end
+	}
+	public static function systemVersion() : String
+	{
+		#if js
+			return null;
+		#else
+			return RealPlatform.systemVersion();
+		#end
+	}
+	public static function userAgent() : String
+	{
+		#if js
+			return RealPlatform.userAgent();
+		#else
+			return null;
+		#end
+	}
+	
 	public static function isWindows():Bool 
 	{
 		return RealPlatform.isWindows();
@@ -35,4 +60,13 @@ class Platform
 			return RealPlatform.is64Bit();
 		#end
 	}
+}
+
+@:enum
+abstract SystemName(String) to String
+{
+	var Windows = "Windows";
+	var Mac = "Mac";
+	var Linux = "Linux";
+	var Other = "Other";
 }

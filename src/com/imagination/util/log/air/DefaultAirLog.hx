@@ -1,12 +1,15 @@
 package com.imagination.util.log.air;
-import com.imagination.delay.Delay;
 import com.imagination.util.app.App;
 import com.imagination.util.fs.Files;
 import com.imagination.util.log.Log.LogLevel;
 import com.imagination.util.log.customTrace.CustomTrace;
+import com.imagination.util.time.EnterFrame;
 import flash.display.DisplayObject;
 import flash.errors.Error;
+import flash.events.PermissionEvent;
 import flash.events.UncaughtErrorEvent;
+import flash.filesystem.File;
+import flash.permissions.PermissionStatus;
 import flash.system.Capabilities;
 
 /**
@@ -21,24 +24,16 @@ class DefaultAirLog
 					];
 					
 	private static var restartRequested:Bool;
+	private static var permissionFile:File;
 	
 	public static function install(root:DisplayObject, ?restartApp:Void->Void):Void
 	{
 		if (installed) return;
 		installed = true;
 		
-		var docsDir:String  = Files.appDocsDir();
-		
-		// Must be runtime conditional because of SWC packaging
-		//if(Capabilities.isDebugger){
+		#if debug
 			Log.mapHandler(new TraceLogger(LogFormatImpl.fdFormat), Log.ALL_LEVELS);
-		//}
-		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "log" + Files.slash(), true), Log.ALL_LEVELS);
-		
-		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
-		
-		//Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.CRITICAL_ERROR]);
+		#end
 		
 		Log.mapHandler(new MassErrorQuitLogger(), [LogLevel.UNCAUGHT_ERROR, LogLevel.CRITICAL_ERROR]);
 		
@@ -46,7 +41,40 @@ class DefaultAirLog
 		
 		root.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError.bind(_, restartApp));
 		
-		CustomTrace.install();
+		checkFilePermission(null);
+	}
+	
+	static private function checkFilePermission(e:PermissionEvent) 
+	{
+		if (File.permissionStatus == PermissionStatus.GRANTED){
+			installFileLoggers();
+		}else{
+			if (File.permissionStatus == PermissionStatus.DENIED){
+				// Add listener anyway as overlapping 'requestPermission' calls can sometimes report 'denied' while user is being prompted
+				Logger.warn(DefaultAirLog, "Failed to install AIR file loggers, file permission was denied");
+			}
+			if (permissionFile == null){
+				permissionFile = new File();
+				permissionFile.addEventListener(PermissionEvent.PERMISSION_STATUS, checkFilePermission);
+				var requestPermission:Void->Void = Reflect.field(permissionFile, "requestPermission");
+				if (requestPermission != null) requestPermission();
+				else installFileLoggers();
+			}
+		}
+	}
+	
+	static function installFileLoggers() 
+	{
+		if (permissionFile != null){
+			permissionFile.removeEventListener(PermissionEvent.PERMISSION_STATUS, checkFilePermission);
+			permissionFile = null;
+		}
+		
+		var docsDir:String  = Files.appDocsDir();
+		
+		Log.mapHandler(new HtmlFileLogger(docsDir + "log" + Files.slash(), true), Log.ALL_LEVELS);
+		
+		Log.mapHandler(new HtmlFileLogger(docsDir + "errorLog" + Files.slash(), false), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR]);
 	}
 	
 	#if raven
@@ -86,7 +114,7 @@ class DefaultAirLog
 			
 			if (!restartRequested && restartApp!=null && criticalErrorCodes.indexOf(err.errorID) != -1){
 				Logger.error(e.target, "Critical error "+err.errorID+" caught, attempting restart");
-				Delay.byFrames(1, restartApp);
+				EnterFrame.delay(restartApp);
 				restartRequested = true;
 			}
 		}else {

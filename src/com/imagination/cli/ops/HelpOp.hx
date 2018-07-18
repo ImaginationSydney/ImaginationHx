@@ -2,8 +2,6 @@ package com.imagination.cli.ops;
 import com.imagination.cli.OpArg;
 import com.imagination.cli.ops.IOp;
 import com.imagination.cli.utils.PrintTools;
-import haxe.ds.StringMap;
-import haxe.Resource;
 
 /**
  * ...
@@ -15,13 +13,13 @@ class HelpOp implements IOp
 	
 	public static var ARG_OP:String = "op";
 	
-	var ops:StringMap<IOp>;
+	var ops:Map<String, IOp>;
 	var opNames:Array<String>;
 	var toolName:String;
 	var version:String;
 	
 	
-	public function new(opNames:Array<String>, ops:StringMap<IOp>, toolName:String, version:String) 
+	public function new(opNames:Array<String>, ops:Map<String, IOp>, toolName:String, version:String) 
 	{
 		this.opNames = opNames;
 		this.ops = ops;

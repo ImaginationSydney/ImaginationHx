@@ -6,6 +6,7 @@ package com.imagination.util.log.customTrace;
  */
 class CustomTrace
 {
+	private static var originalTrace;
 	private static var installed:Bool;
 	
 	public static function install():Void
@@ -13,6 +14,7 @@ class CustomTrace
 		if (installed) return;
 		installed = true;
 		
+		originalTrace = haxe.Log.trace;
 		haxe.Log.trace = customTrace;
 	}
 	
@@ -21,6 +23,10 @@ class CustomTrace
 		var classPath = inf.className;
 		var lastDot:Int = classPath.lastIndexOf(".");
 		if (lastDot != -1) classPath = classPath.substr(lastDot + 1);
-		Logger.log(classPath, v);
+		if(Log.hasHandlers){
+			Logger.log(classPath, v);
+		}else{
+			originalTrace(v, inf);
+		}
 	}
 }

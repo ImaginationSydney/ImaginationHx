@@ -42,7 +42,7 @@ class JsAppWindows
 		var document = Browser.document;
 		for (i in 0 ... VIS_API_PROPS.length){
 			var prop:String = VIS_API_PROPS[i];
-			if (untyped __typeof__(Reflect.field(document, prop)) != "undefined") {
+			if (js.Syntax.typeof(Reflect.field(document, prop)) != "undefined") {
 				visProp = prop;
 				visEvent = VIS_API_EVENTS[i];
 				break;

@@ -107,10 +107,6 @@ class HtmlFileLogger implements ILogHandler
 			targetFileCount++;
 		}
 		
-		if (lastFile!=null && lastFile.exists && lastFile.size < MAX_LOG_SIZE) {
-			Logger.warn(this, "Last log file is smaller than 2mb, possibly from crash");
-		}
-		
 		_nowDate = now;
 	}
 	

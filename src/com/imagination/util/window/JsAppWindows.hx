@@ -237,9 +237,7 @@ class JsAppWindow
 	
 	private function onBeginExit(e:Event):Bool 
 	{
-		trace("onBeginExit");
 		closing.dispatch(this, e.preventDefault);
-		trace("onBeginExit: "+e.defaultPrevented);
 		if (e.defaultPrevented){
 			return js.Browser.window.confirm("You will loose unsaved work"); // This message will be replaced by most browsers;
 		}else{

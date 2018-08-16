@@ -1,5 +1,6 @@
 package com.imagination.util.log;
 import com.imagination.util.log.Log.LogLevel;
+import haxe.ds.Map;
 import raven.Raven;
 import raven.types.RavenCallData;
 import raven.types.RavenConfig;
@@ -8,15 +9,15 @@ import raven.types.RavenConfig;
  * ...
  * @author Thomas Byrne
  */
+@:access(raven.Raven)
 class SentryLogger implements ILogHandler
 {
-	//private var client:RavenClient;
-	var appId:String;
-
 	public function new(appId:String, sentryDsn:String, ?terminalName:String) 
 	{
 		Raven.config(sentryDsn);
-		this.appId = appId;
+		
+		if (Raven.globalOptions.tags == null) Raven.globalOptions.tags = new Map();
+		Raven.globalOptions.tags.set("ApplicationID", appId);
 		
 		if (terminalName != null) {
 			Raven.globalUser = { id:terminalName };

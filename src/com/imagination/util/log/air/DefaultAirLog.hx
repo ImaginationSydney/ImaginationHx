@@ -78,10 +78,12 @@ class DefaultAirLog
 	}
 	
 	#if raven
-	public static function installSentry(sentryDsn:String, ?terminalName:String):Void
+	public static function installSentry(sentryDsn:String, ?terminalName:String, ?logLevels:Array<LogLevel>):Void
 	{
+		if (terminalName == "") terminalName = null;
+		if (logLevels == null) logLevels = [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR];
 		if(terminalName==null)Logger.log(DefaultAirLog, "No 'terminalName' found, will track using IP address (set this up with global config in ~/Docs/imagination/_global/config.json)");
-		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), [LogLevel.UNCAUGHT_ERROR, LogLevel.ERROR, LogLevel.CRITICAL_ERROR, LogLevel.WARN]);
+		Log.mapHandler(new SentryLogger(App.getAppId(), sentryDsn, terminalName), logLevels);
 	}
 	#end
 	

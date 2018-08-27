@@ -1,4 +1,5 @@
 package com.imagination.util.log;
+import com.imagination.util.app.App;
 import com.imagination.util.log.Log.LogLevel;
 import haxe.ds.Map;
 import raven.Raven;
@@ -18,6 +19,7 @@ class SentryLogger implements ILogHandler
 		
 		if (Raven.globalOptions.tags == null) Raven.globalOptions.tags = new Map();
 		Raven.globalOptions.tags.set("ApplicationID", appId);
+		Raven.globalOptions.tags.set("ApplicationVersion", App.getVersion());
 		
 		if (terminalName != null) {
 			Raven.globalUser = { id:terminalName };

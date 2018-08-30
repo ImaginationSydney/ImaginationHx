@@ -121,7 +121,7 @@ class EnterFrame
 	
 	static public function delay(handler:Void->Void, frames:Int=1) 
 	{
-		if (frames == 1) {
+		if (frames <= 1) {
 			signal.addOnce(handler);
 		}else {
 			var delay:DelayTracker = getDelay(handler, frames);

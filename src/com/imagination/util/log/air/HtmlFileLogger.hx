@@ -44,8 +44,6 @@ class HtmlFileLogger implements ILogHandler
 	public var formatter:LogFormatter;
 	public var logCount:Int = 0;
 	
-	private var _nowDate:Date;
-	
 	var header:String;
 	
 	public function new(dir:String, viaWorker:Bool, formatter:LogFormatter=null, fileExt:String="html"):Void
@@ -96,18 +94,19 @@ class HtmlFileLogger implements ILogHandler
 	private function findNextFile():Void 
 	{
 		var now:Date = GlobalTime.now();
+		targetFileDate = now.getDate();
+		var nowStr = toDateString(now);
+		
 		var lastFile:File = null;
-		if (_nowDate != null && now.getDate() != _nowDate.getDate()) targetFileCount = 0;
+		targetFileCount = 0;
 		
 		while (targetFile==null || targetFile.exists) {
 			lastFile = targetFile;
-			var fileName:String = toDateString(now) + (targetFileCount>0 ? "_"+pad(targetFileCount, 2) : "") + "." + fileExt;
+			var fileName:String = nowStr + (targetFileCount>0 ? "_"+pad(targetFileCount, 2) : "") + "." + fileExt;
 			targetFile = new File(dir + fileName);
-			targetFileDate = now.getDate();
 			targetFileCount++;
 		}
 		
-		_nowDate = now;
 	}
 	
 	function toDateString(date:Date) : String 

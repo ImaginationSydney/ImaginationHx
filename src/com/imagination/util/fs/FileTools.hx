@@ -283,6 +283,35 @@ using StringTools;
 			}
 		}
 		
+		
+		static public function renameAsync(path : String, newPath:String, ?onComplete:Bool->Void) :Void
+		{
+			if (!exists(path)){
+				onComplete(false);
+				return;
+			}
+			
+			temp.nativePath = path;
+			if (onComplete != null){
+				var eventTracker = new EventListenerTracker(temp);
+				eventTracker.addEventListener(Event.COMPLETE, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(true);
+				});
+				eventTracker.addEventListener(IOErrorEvent.IO_ERROR, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(false);
+				});
+			}
+			try{
+				temp.moveToAsync(new File(newPath), true);
+			}catch (e:Dynamic){
+				if (onComplete != null){
+					onComplete(false);
+				}
+			}
+		}
+		
 		static public function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void
 		{
 			if (!exists(path)) return;
@@ -298,7 +327,7 @@ using StringTools;
 				var eventTracker = new EventListenerTracker(temp);
 				eventTracker.addEventListener(Event.COMPLETE, function(e){
 					eventTracker.removeAllEventListeners();
-					onComplete(false);
+					onComplete(true);
 				});
 				eventTracker.addEventListener(IOErrorEvent.IO_ERROR, function(e){
 					eventTracker.removeAllEventListeners();

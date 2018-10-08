@@ -5,6 +5,7 @@ import com.imagination.util.window.AppWindows;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.xml.Fast;
+import lime.app.Application;
 
 #if openfl
 import openfl.Lib;
@@ -25,6 +26,7 @@ import js.html.Event;
  * @author Thomas Byrne
  */
 @:access(com.imagination.util.window.AirAppWindows)
+@:access(lime.ui.Window)
 class App
 {
 	@:isVar static public var focused(get, null):Notifier<Bool>;
@@ -57,7 +59,7 @@ class App
 	@:isVar static public var appElement(get, null):js.html.Element;
 	static function get_appElement():js.html.Element 
 	{
-		if (appElement == null) appElement = js.Browser.document.getElementById("openfl-content");
+		if (appElement == null) appElement = Application.current.window.backend.element;
 		return appElement;
 	}
 	#end

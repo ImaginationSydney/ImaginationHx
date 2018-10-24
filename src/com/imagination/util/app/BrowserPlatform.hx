@@ -97,6 +97,11 @@ class BrowserPlatform
 		//Browser.alert(msg);
 	}
 	
+	static public function userAgent():String
+	{
+		return Browser.navigator.userAgent;
+	}
+	
 	static private function populateBrowserVersion(regEx:EReg) 
 	{
 		_browserVersionMaj = Std.parseInt(regEx.matched(1));

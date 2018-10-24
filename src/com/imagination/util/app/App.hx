@@ -3,6 +3,7 @@ import com.imagination.util.window.AppWindows;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.xml.Fast;
+import lime.app.Application;
 
 #if openfl
 import openfl.Lib;
@@ -28,6 +29,7 @@ import com.imagination.util.app.AppExit.ExitContinue;
  * @author Thomas Byrne
  */
 @:access(com.imagination.util.window.AirAppWindows)
+@:access(lime.ui.Window)
 class App
 {
 	#if openfl
@@ -62,7 +64,7 @@ class App
 	@:isVar static public var appElement(get, null):js.html.Element;
 	static function get_appElement():js.html.Element 
 	{
-		if (appElement == null) appElement = js.Browser.document.getElementById("openfl-content");
+		if (appElement == null) appElement = Application.current.window.backend.element;
 		return appElement;
 	}
 	#end
@@ -130,7 +132,7 @@ class App
 		AppExit.exit(errorCode);
 	}
 	
-	static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
+	/*static public function addExitConfirmer(handler:Int -> ExitContinue -> Void) 
 	{
 		AppExit.addExitConfirmer(handler);
 		
@@ -149,7 +151,7 @@ class App
 	static public function removeExitCleanup(handler:Int -> (Void -> Void) -> Void) 
 	{
 		AppExit.removeExitCleanup(handler);
-	}
+	}*/
 	
 	#if flash
 	static public function getAppExe() 

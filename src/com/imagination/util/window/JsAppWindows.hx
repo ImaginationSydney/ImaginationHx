@@ -42,7 +42,11 @@ class JsAppWindows
 		var document = Browser.document;
 		for (i in 0 ... VIS_API_PROPS.length){
 			var prop:String = VIS_API_PROPS[i];
+		#if (haxe_ver>3)
+			if (js.Syntax.typeof(Reflect.field(document, prop)) != "undefined") {
+		#else
 			if (untyped __typeof__(Reflect.field(document, prop)) != "undefined") {
+		#end
 				visProp = prop;
 				visEvent = VIS_API_EVENTS[i];
 				break;
@@ -237,9 +241,7 @@ class JsAppWindow
 	
 	private function onBeginExit(e:Event):Bool 
 	{
-		trace("onBeginExit");
 		closing.dispatch(this, e.preventDefault);
-		trace("onBeginExit: "+e.defaultPrevented);
 		if (e.defaultPrevented){
 			return js.Browser.window.confirm("You will loose unsaved work"); // This message will be replaced by most browsers;
 		}else{

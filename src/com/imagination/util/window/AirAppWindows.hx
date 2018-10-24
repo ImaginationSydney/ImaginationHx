@@ -6,6 +6,7 @@ import com.imagination.util.geom.Point;
 import com.imagination.util.signals.Signal.Signal0;
 import com.imagination.util.signals.Signal.Signal1;
 import com.imagination.util.signals.Signal.Signal2;
+import com.imagination.util.window.AppWindows.WindowDisplayState;
 import flash.desktop.NativeApplication;
 import flash.display.NativeWindow;
 import flash.display.NativeWindowInitOptions;
@@ -137,7 +138,7 @@ class AirAppWindow
 	
 	public var contentsScaleFactor(get, null):Float;
 	
-	@:isVar public var displayState(default, null):Notifier<NativeWindowDisplayState> = new Notifier<NativeWindowDisplayState>();
+	@:isVar public var displayState(default, null):Notifier<WindowDisplayState> = new Notifier<WindowDisplayState>();
 	
 	public var stage(get, null):Stage;
 	
@@ -232,7 +233,7 @@ class AirAppWindow
 		focused.value = window.active;
 		ignoreChanges = false;
 		
-		displayState.value = window.displayState;
+		displayState.value = untyped window.displayState;
 	}
 	
 	private function onWindowDeactivate(?e:Event):Void 
@@ -313,6 +314,11 @@ class AirAppWindow
 		onMove.dispatch();
 	}
 	
+	function get_nativeWindow():NativeWindow 
+	{
+		return window;
+	}
+	
 	public function resizeTo(width:Float, height:Float):Void
 	{
 		var scale = window.stage.contentsScaleFactor;
@@ -328,11 +334,6 @@ class AirAppWindow
 		}
 		
 		onResize.dispatch();
-	}
-	
-	function get_nativeWindow():NativeWindow 
-	{
-		return window;
 	}
 	
 	public function setBounds(x:Float, y:Float, width:Float, height:Float):Void

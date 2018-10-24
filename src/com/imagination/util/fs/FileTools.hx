@@ -1,4 +1,5 @@
 package com.imagination.util.fs;
+import com.imagination.util.data.JSON;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
 
@@ -12,11 +13,13 @@ import com.imagination.air.util.EventListenerTracker;
 import openfl.utils.ByteArray;
 #end
 
+using StringTools;
+
 /**
  * ...
  * @author Thomas Byrne
  */
-#if flash
+#if air
 
 	import flash.filesystem.File as FlFile;
 	import flash.filesystem.FileStream;
@@ -26,8 +29,17 @@ import openfl.utils.ByteArray;
 	
 	class FileTools
 	{
-		static var temp:FlFile = new FlFile();
-
+		static public var DEFAULT_WRITE_CONFIRM:String -> String -> Bool = function(str1:String, str2:String) : Bool return str1 == str2;
+		static public var DEFAULT_READ_CONFIRM:String -> Bool = function(str:String) : Bool return str != "";
+		
+		static public var JSON_READ_CONFIRM:String -> Bool = function(str:String) : Bool try { JSON.parse(str); return true; } catch (e:Dynamic){ return false; };
+		
+		static var temp:FlFile;
+		
+		static function __init__():Void
+		{
+			temp = new FlFile();
+		}
 		
 		static public function getBytes(path:String) : Bytes
 		{
@@ -49,8 +61,30 @@ import openfl.utils.ByteArray;
 			return ret;
 		}
 		
-		public static function saveContentWithConfirm(path:String, content:String, confirm:String -> String -> Bool):Void
+		public static function getContentWithConfirm(path:String, ?confirm:String -> Bool):String
 		{
+			if (confirm == null) confirm = DEFAULT_READ_CONFIRM;
+			
+			try{
+				var ret = getContent(path);
+				if (confirm(ret)) return ret;
+			}catch (e:Dynamic){}
+			
+			var temp:String = path + ".tmp";
+			if(exists(temp)){
+				try{
+					var ret = getContent(temp);
+					if (confirm(ret)) return ret;
+				}catch (e:Dynamic){}
+			}
+			
+			return null;
+		}
+		
+		public static function saveContentWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool):Void
+		{
+			if (confirm == null) confirm = DEFAULT_WRITE_CONFIRM;
+			
 			var temp:String = path + ".tmp";
 			saveContent(temp, content);
 			var savedContent:String = getContent(temp);
@@ -74,17 +108,36 @@ import openfl.utils.ByteArray;
 			stream.close();
 		}
 		
+		public static function getBinaryAsync(path:String, onComplete:Bytes->Void, ?onFail:String->Void):Void
+		{
+			temp.nativePath = path;
+			var stream:FileStream =  new FileStream();
+			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
+			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandlerBytes.bind(_, stream, listenerTracker, onComplete) );
+			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, readFailHandler.bind(_, stream, listenerTracker, onFail) );
+			stream.openAsync(temp, FileMode.READ);
+		}
+		
+		static private function readSuccessHandlerBytes(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:Bytes->Void):Void 
+		{
+			listenerTracker.removeAllEventListeners();
+			var ret:BytesData = new BytesData(); 
+			stream.readBytes(ret, 0, stream.bytesAvailable);
+			stream.close();
+			onComplete(Bytes.ofData(ret));
+		}
+		
 		public static function getContentAsync(path:String, onComplete:String->Void, ?onFail:String->Void):Void
 		{
 			temp.nativePath = path;
 			var stream:FileStream =  new FileStream();
 			var listenerTracker:EventListenerTracker = new EventListenerTracker(stream);
-			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandler.bind(_, stream, listenerTracker, onComplete) );
+			listenerTracker.addEventListener(Event.COMPLETE, readSuccessHandlerStr.bind(_, stream, listenerTracker, onComplete) );
 			listenerTracker.addEventListener(IOErrorEvent.IO_ERROR, readFailHandler.bind(_, stream, listenerTracker, onFail) );
 			stream.openAsync(temp, FileMode.READ);
 		}
 		
-		static private function readSuccessHandler(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
+		static private function readSuccessHandlerStr(e:Event, stream:FileStream, listenerTracker:EventListenerTracker, onComplete:String->Void):Void 
 		{
 			listenerTracker.removeAllEventListeners();
 			var ret:String = stream.readUTFBytes(stream.bytesAvailable);
@@ -101,11 +154,7 @@ import openfl.utils.ByteArray;
 		
 		public static function saveContentAsyncWithConfirm(path:String, content:String, ?confirm:String -> String -> Bool, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			if (confirm == null){
-				confirm = function(str1:String, str2:String) : Bool {
-					return str1 == str2;
-				}
-			}
+			if (confirm == null) confirm = DEFAULT_WRITE_CONFIRM;
 			var temp = path + ".tmp";
 			FileTools.saveContentAsync(temp, content, function() {
 				FileTools.getContentAsync(temp, function (savedContent:String) {
@@ -115,9 +164,13 @@ import openfl.utils.ByteArray;
 					}catch (e:Dynamic){}
 					
 					if (pass) {
-						var file:File = new File(path);
-						var temp:File = new File(temp);
-						temp.copyToAsync(file, true);
+						try{
+							var file:File = new File(path);
+							var temp:File = new File(temp);
+							temp.copyToAsync(file, true);
+						}catch (e:Dynamic){
+							if (onFail != null) onFail(Std.string(e));
+						}
 						if (onComplete != null) onComplete();
 					}
 					else {
@@ -235,6 +288,35 @@ import openfl.utils.ByteArray;
 			}
 		}
 		
+		
+		static public function renameAsync(path : String, newPath:String, ?onComplete:Bool->Void) :Void
+		{
+			if (!exists(path)){
+				onComplete(false);
+				return;
+			}
+			
+			temp.nativePath = path;
+			if (onComplete != null){
+				var eventTracker = new EventListenerTracker(temp);
+				eventTracker.addEventListener(Event.COMPLETE, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(true);
+				});
+				eventTracker.addEventListener(IOErrorEvent.IO_ERROR, function(e){
+					eventTracker.removeAllEventListeners();
+					onComplete(false);
+				});
+			}
+			try{
+				temp.moveToAsync(new File(newPath), true);
+			}catch (e:Dynamic){
+				if (onComplete != null){
+					onComplete(false);
+				}
+			}
+		}
+		
 		static public function deleteDirectory(path : String, deleteDirectoryContents:Bool = false) :Void
 		{
 			if (!exists(path)) return;
@@ -250,7 +332,7 @@ import openfl.utils.ByteArray;
 				var eventTracker = new EventListenerTracker(temp);
 				eventTracker.addEventListener(Event.COMPLETE, function(e){
 					eventTracker.removeAllEventListeners();
-					onComplete(false);
+					onComplete(true);
 				});
 				eventTracker.addEventListener(IOErrorEvent.IO_ERROR, function(e){
 					eventTracker.removeAllEventListeners();
@@ -284,6 +366,12 @@ import openfl.utils.ByteArray;
 			return temp.url;
 		}
 		
+		static public function uriToPlatformPath(path:String) : String
+		{
+			temp.url = path;
+			return temp.nativePath;
+		}
+		
 		
 		
 		
@@ -306,18 +394,30 @@ import openfl.utils.ByteArray;
 		{
 			return sys.io.File.getContent(path);
 		}
-		public static function getContentAsync(path:String, onComplete:String->Void):Void
+		public static function getContentAsync(path:String, onComplete:String->Void, ?onFail:String->Void):Void
 		{
-			onComplete(sys.io.File.getContent(path));
+			var data:String;
+			try{
+				data = sys.io.File.getContent(path);
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(e);
+				return;
+			}
+			onComplete(data);
 		}
 		public inline static function saveContent(path:String, content:String):Void
 		{
 			return sys.io.File.saveContent(path, content);
 		}
-		public static function saveContentAsync(path:String, content:String, onComplete:Void->Void):Void
+		public static function saveContentAsync(path:String, content:String, ?onComplete:Void->Void, ?onFail:String->Void):Void
 		{
-			sys.io.File.saveContent(path, content);
-			onComplete();
+			try{
+				sys.io.File.saveContent(path, content);
+			}catch (e:Dynamic){
+				if (onFail != null) onFail(e);
+				return;
+			}
+			if(onComplete != null) onComplete();
 		}
 		inline public static function exists(path:String):Bool
 		{

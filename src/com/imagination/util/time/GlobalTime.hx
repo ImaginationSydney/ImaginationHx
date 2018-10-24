@@ -1,5 +1,5 @@
 package com.imagination.util.time;
-import openfl.Lib;
+
 
 /**
  * ...
@@ -31,7 +31,7 @@ class GlobalTime
 		
 		_dummyDate = Date.now();
 		_initTimeUtc = _dummyDate.getTime();
-		_startTimer = Lib.getTimer();
+		_startTimer = Timer.getTimer();
 		
 		#if (flash || js)
 			_defaultTimezoneOffset = untyped _dummyDate.getTimezoneOffset();
@@ -90,7 +90,7 @@ class GlobalTime
 	public static function nowTimeUtc():Float
 	{
 		init();
-		return _initTimeUtc + (pause ? _pausedElapsed : Lib.getTimer() - _startTimer) + offset;
+		return _initTimeUtc + (pause ? _pausedElapsed : Timer.getTimer() - _startTimer) + offset;
 	}
 	
 	public static function getToday(?timezoneOffset:Float, ?createDate:Bool):Date 
@@ -117,9 +117,9 @@ class GlobalTime
 		if (pause == value) return value;
 		pause = value;
 		if (value){
-			_pausedElapsed = Lib.getTimer() - _startTimer;
+			_pausedElapsed = Timer.getTimer() - _startTimer;
 		}else{
-			_startTimer = Lib.getTimer() - _pausedElapsed;
+			_startTimer = Timer.getTimer() - _pausedElapsed;
 		}
 		return value;
 	}

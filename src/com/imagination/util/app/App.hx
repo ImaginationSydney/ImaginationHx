@@ -1,6 +1,4 @@
 package com.imagination.util.app;
-import com.imagination.core.type.Notifier;
-import com.imagination.util.app.AppExit.ExitContinue;
 import com.imagination.util.window.AppWindows;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
@@ -9,6 +7,7 @@ import haxe.xml.Fast;
 #if openfl
 import openfl.Lib;
 import openfl.display.Stage;
+import com.imagination.core.type.Notifier;
 #end
 
 #if flash
@@ -20,6 +19,10 @@ import js.html.Event;
 
 #end
 
+#if !sys
+import com.imagination.util.app.AppExit.ExitContinue;
+#end
+
 /**
  * ...
  * @author Thomas Byrne
@@ -27,12 +30,14 @@ import js.html.Event;
 @:access(com.imagination.util.window.AirAppWindows)
 class App
 {
+	#if openfl
 	@:isVar static public var focused(get, null):Notifier<Bool>;
 	static function get_focused():Notifier<Bool> 
 	{
 		setup();
 		return focused;
 	}
+	#end
 	
 	static private var appId:String;
 	static private var appExe:String;

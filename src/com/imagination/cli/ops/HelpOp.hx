@@ -9,7 +9,8 @@ import com.imagination.cli.utils.PrintTools;
  */
 class HelpOp implements IOp
 {
-	public static var NAME:String = "help";
+	public var name:String = "-help";
+	public var aliases:Array<String> = ['help', '-h'];
 	
 	public static var ARG_OP:String = "op";
 	
@@ -36,7 +37,7 @@ class HelpOp implements IOp
 		return "Dsiplays help on one or all operations";
 	}
 	
-	public function doOp(args:Map<String, String>):Void 
+	public function doOp(name:String, args:Args):Void 
 	{
 		var filterOp:String = cast args.get(ARG_OP);
 		
@@ -51,6 +52,9 @@ class HelpOp implements IOp
 			
 			PrintTools.help("\n"+key + ":");
 			PrintTools.help(tabText(1, op.getHelp()));
+			if(op.aliases!=null && op.aliases.length > 0){
+				PrintTools.help(tabText(1, "( Aliases: " + op.aliases.join(", ") + " )") );
+			}
 			var argInfos:Array<OpArg> = op.getArgInfo();
 			if(argInfos.length>0){
 				PrintTools.help(tabText(1, "Arguments:"));

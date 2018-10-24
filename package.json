@@ -1,4 +1,17 @@
 {
 	"name": "open-core-hx",
-	"version": "0.0.0"
+	"version": "0.0.0",
+	"homepage": "https://github.com/ImaginationSydney/ImaginationHx",
+	"license" :
+	{
+		"type" : "MIT",
+		"url" : "https://www.opensource.org/licenses/mit-license.php"
+	},
+	"repository": {
+		"type" : "git",
+		"url" : "https://github.com/ImaginationSydney/ImaginationHx.git"
+	},
+	"source":[
+		"src"
+	]
 }

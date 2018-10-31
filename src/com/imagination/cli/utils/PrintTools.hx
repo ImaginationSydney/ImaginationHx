@@ -67,8 +67,10 @@ class PrintTools
 					textColor = White;
 					bgColor = Blue;
 					
-				case INFO:
+				case HINT:
 					textColor = LightGray;
+					
+				case INFO:
 					textColor = DarkGray;
 					
 				case PROGRESS_INFO:
@@ -77,6 +79,9 @@ class PrintTools
 				case WARNING:
 					textColor = LightYellow;
 					//forceUpper = true;
+					
+				case ASK_QUESTION:
+					textColor = LightYellow;
 					
 				case MENU_HEADING:
 					textColor = LightBlue;
@@ -103,11 +108,11 @@ class PrintTools
 		}
 	}
 	
-	static public function confirm(msg:String, complete:(Bool->Void), ?timeout:Float) : Bool
+	static public function confirm(msg:String, ?timeout:Float) : Bool
 	{
-		#if sys
+		newline();
+		print(msg, PrintStyle.ASK_QUESTION);
 		
-		print(msg);
 		var input = Sys.stdin();
 		var i = 0;
 		while (true){
@@ -127,32 +132,15 @@ class PrintTools
 			Sys.sleep(0.25);
 		}
 		return false;
-		
-		#elseif hxnodejs
-		
-		for (i in 0 ... options.length){
-			msg += ("\n" + (i + 1)+") " + options[i]);
-		}
-		
-		var rl:js.node.readline.Interface = js.node.Readline.createInterface({
-		  input: js.Node.process.stdin,
-		  output: js.Node.process.stdout
-		});
-
-		rl.question(msg, function(answer) {
-			if (answer.length > 1) answer = answer.substr(0, 1);
-			complete(answer == 'y' || answer == 'Y');
-			rl.close();
-		});
-		
-		#end
 	}
 	
 	
 	#if sys
 	static public function selectSync(msg:String, options:Array<String>, ?timeout:Float) : Int
 	{
-		print(msg);
+		newline();
+		print(msg, PrintStyle.ASK_QUESTION);
+		
 		for (i in 0 ... options.length){
 			print((i + 1)+") " + options[i]);
 		}
@@ -161,7 +149,7 @@ class PrintTools
 		var i = 0;
 		var chars:String = "";
 		while (true){
-			i += 500;
+			i += 250;
 			if (timeout!=null && i > timeout * 1000){
 				return ( -1);
 			}
@@ -181,6 +169,34 @@ class PrintTools
 			Sys.sleep(0.25);
 		}
 		return (-1);
+	}
+	static public function askSync(msg:String, ?def:String, ?timeout:Float) : String
+	{
+		newline();
+		print(msg, PrintStyle.ASK_QUESTION);
+		if (def != null) print('Default: ${def} [Hit Enter]', PrintStyle.HINT);
+		
+		var input = Sys.stdin();
+		var i = 0;
+		var chars:String = input.readString(1);
+		if (chars == "\n") chars = '';
+		while (true){
+			i += 250;
+			if (timeout!=null && i > timeout * 1000){
+				return null;
+			}
+			var read:String = input.readString(1);
+			if (read != null) chars = chars + read;
+			
+			if (chars.length == 0 || chars.charAt(chars.length - 1) != "\n"){
+				Sys.sleep(0.25);
+				continue;
+			}
+			var ret = chars.substr(0, chars.length - 1);
+			if (ret == '') ret = null;
+			return ret;
+		}
+		return null;
 	}
 	#end
 	
@@ -215,10 +231,12 @@ class PrintTools
 
 enum PrintStyle{
 	HELP;
+	HINT;
 	ERROR;
 	WARNING;
 	INFO;
 	PROGRESS_INFO;
 	MENU_HEADING;
 	MENU_OPTION;
+	ASK_QUESTION;
 }

@@ -4,6 +4,7 @@ import com.imagination.cli.ops.IOp;
 import com.imagination.cli.OpArg;
 import com.imagination.cli.utils.PrintTools;
 import com.imagination.util.log.cli.DefaultCliLog;
+import com.imagination.util.log.customTrace.CustomTrace;
 import haxe.Resource;
 import haxe.Template;
 import sys.FileSystem;
@@ -31,6 +32,8 @@ class CliTool
 		#if cpp
 		Sys.command("echo off");
 		#end
+		
+		CustomTrace.install();
 		DefaultCliLog.install();
 		
 		opMap = new Map();
@@ -184,7 +187,11 @@ class CliTool
 				}
 			}
 		}
-		op.doOp(name, new ArgsImpl(vars));
+		try{
+			op.doOp(name, new ArgsImpl(vars));
+		}catch (e:Dynamic){
+			PrintTools.error("ERROR: " + e);
+		}
 	}
 	
 	

@@ -61,7 +61,7 @@ class PrintTools
 			switch(style){
 				case ERROR:
 					textColor = Red;
-					forceUpper = true;
+					//forceUpper = true;
 					
 				case HELP:
 					textColor = White;
@@ -76,7 +76,7 @@ class PrintTools
 					
 				case WARNING:
 					textColor = LightYellow;
-					forceUpper = true;
+					//forceUpper = true;
 					
 				case MENU_HEADING:
 					textColor = LightBlue;
@@ -103,8 +103,10 @@ class PrintTools
 		}
 	}
 	
-	static public function confirm(msg:String, ?timeout:Float) : Bool
+	static public function confirm(msg:String, complete:(Bool->Void), ?timeout:Float) : Bool
 	{
+		#if sys
+		
 		print(msg);
 		var input = Sys.stdin();
 		var i = 0;
@@ -125,9 +127,30 @@ class PrintTools
 			Sys.sleep(0.25);
 		}
 		return false;
+		
+		#elseif hxnodejs
+		
+		for (i in 0 ... options.length){
+			msg += ("\n" + (i + 1)+") " + options[i]);
+		}
+		
+		var rl:js.node.readline.Interface = js.node.Readline.createInterface({
+		  input: js.Node.process.stdin,
+		  output: js.Node.process.stdout
+		});
+
+		rl.question(msg, function(answer) {
+			if (answer.length > 1) answer = answer.substr(0, 1);
+			complete(answer == 'y' || answer == 'Y');
+			rl.close();
+		});
+		
+		#end
 	}
 	
-	static public function select(msg:String, options:Array<String>, ?timeout:Float) : Int
+	
+	#if sys
+	static public function selectSync(msg:String, options:Array<String>, ?timeout:Float) : Int
 	{
 		print(msg);
 		for (i in 0 ... options.length){
@@ -140,7 +163,7 @@ class PrintTools
 		while (true){
 			i += 500;
 			if (timeout!=null && i > timeout * 1000){
-				return -1;
+				return ( -1);
 			}
 			var read:String = input.readString(1);
 			if (read != null) chars = chars + read;
@@ -152,12 +175,40 @@ class PrintTools
 			var index = Std.parseInt(chars);
 			index -= 1;
 			if (index >= 0 && index < options.length){
-				return index;
+				return (index);
 			}
 			chars = "";
 			Sys.sleep(0.25);
 		}
-		return -1;
+		return (-1);
+	}
+	#end
+	
+	static public function select(msg:String, options:Array<String>, complete:(Int->Void), ?timeout:Float) : Void
+	{
+		#if sys
+		
+		complete(selectSync(msg, options, timeout));
+		
+		#elseif hxnodejs
+		
+		for (i in 0 ... options.length){
+			msg += ("\n" + (i + 1)+") " + options[i]);
+		}
+		
+		var rl:js.node.readline.Interface = js.node.Readline.createInterface({
+		  input: js.Node.process.stdin,
+		  output: js.Node.process.stdout
+		});
+
+		rl.question(msg, function(answer) {
+		  var index = options.indexOf(answer);
+		  if (index == -1) index = Std.parseInt(answer);
+		  complete(index);
+		  rl.close();
+		});
+		
+		#end
 	}
 	
 }

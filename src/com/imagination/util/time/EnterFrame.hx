@@ -104,8 +104,10 @@ class EnterFrame
 			return openfl.Lib.getTimer();
 		#elseif flash
 			return flash.Lib.getTimer();
-		#else
+		#elseif sys
 			return Std.int(SysTools.time() * 1000);
+		#else
+			return Std.int(haxe.Timer.stamp() * 1000);
 		#end
 	}
 	

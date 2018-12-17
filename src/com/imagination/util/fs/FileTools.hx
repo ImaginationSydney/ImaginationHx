@@ -3,11 +3,14 @@ import com.imagination.util.data.JSON;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
 
-#if sys
+#if (sys || hxnodejs)
 import sys.FileSystem;
 #else
-import openfl.utils.ByteArray;
 import com.imagination.air.util.EventListenerTracker;
+#end
+
+#if openfl
+import openfl.utils.ByteArray;
 #end
 
 using StringTools;
@@ -197,6 +200,7 @@ using StringTools;
 			}
 		}
 		
+		#if openfl
 		public static function saveBinary(path:String, binary:ByteArray):Bool
 		{
 			try{
@@ -230,6 +234,7 @@ using StringTools;
 				if (onFail != null) onFail(Std.string(e));
 			}
 		}
+		#end
 		
 		static private function writeSuccessHandler(e:Event, listenerTracker:EventListenerTracker, onComplete:Void->Void):Void 
 		{
@@ -380,7 +385,7 @@ using StringTools;
 	}
 
 	
-#elseif sys
+#elseif (sys || hxnodejs)
 
 	abstract FileTools(sys.io.File) to sys.io.File
 	{
@@ -440,6 +445,21 @@ using StringTools;
 			FileSystem.createDirectory(path);
 		}
 		
+		
+		inline public static function appendContent(path:String, content:String) : Void
+		{
+			#if sys
+			
+			var fileOutput = sys.io.File.append(path, false);
+			fileOutput.writeString('\n' + path);
+			
+			#else
+			
+			js.node.Fs.appendFileSync(path, content, 'utf8');
+			
+			#end
+		}
 	}
+	
 
 #end

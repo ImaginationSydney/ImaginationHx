@@ -4,6 +4,8 @@ import com.imagination.cli.ops.IOp;
 import com.imagination.cli.OpArg;
 import com.imagination.cli.utils.PrintTools;
 import com.imagination.util.log.cli.DefaultCliLog;
+import haxe.Resource;
+import haxe.Template;
 import sys.FileSystem;
 
 /**
@@ -46,6 +48,7 @@ class CliTool
 		} );
 		
 		var pendingOp:IOp = null;
+		var pendingName:String = null;
 		var pendingArgs:Array<String> = [];
 		var pendingVars:Map<String, String> = new Map();
 		var pendingVarName:String = null;
@@ -65,6 +68,7 @@ class CliTool
 					exit(1);
 					return;
 				}
+				pendingName = arg;
 				pendingOp = opMap.get(arg);
 				
 			}else if (arg == "=") {
@@ -81,7 +85,8 @@ class CliTool
 					exit(1);
 					return;
 				}
-				executePending(pendingOp, pendingArgs, pendingVars, pendingVarName);
+				executePending(pendingOp, pendingName, pendingArgs, pendingVars, pendingVarName);
+				pendingName = null;
 				pendingOp = null;
 				pendingArgs = [];
 				pendingVars = new Map();
@@ -100,11 +105,19 @@ class CliTool
 			}
 		}
 		if (pendingOp != null) {
-			executePending(pendingOp, pendingArgs, pendingVars, pendingVarName);
+			executePending(pendingOp, pendingName, pendingArgs, pendingVars, pendingVarName);
 		}else {
-			var keys:Array<String> = [];
+			
+			var infoTemplate = Resource.getString("info_template");
+			if(infoTemplate != null){
+				var now = Date.now();
+				var template:Template = new Template(infoTemplate);
+				var info = template.execute({version:Resource.getString("version"), year:now.getFullYear()});
+				Sys.print(info + "\n");
+			}
+			
 			PrintTools.print("Use one of the following operations", PrintStyle.MENU_HEADING);
-			for (key in opMap.keys()) {
+			for (key in opNames) {
 				PrintTools.print(key, PrintStyle.MENU_OPTION);
 			}
 		}
@@ -116,16 +129,22 @@ class CliTool
 	
 	private function addHelpOp(toolName:String, version:String) 
 	{
-		addOp(HelpOp.NAME, new HelpOp(opNames, opMap, toolName, version));
+		addOp(new HelpOp(opNames, opMap, toolName, version));
 	}
 	
-	private function addOp(opName:String, op:IOp) 
+	private function addOp(op:IOp) 
 	{
-		opMap.set(opName, op);
-		opNames.push(opName);
+		opMap.set(op.name, op);
+		opNames.push(op.name);
+		
+		if(op.aliases != null){
+			for (alias in op.aliases){
+				opMap.set(alias, op);
+			}
+		}
 	}
 	
-	private function executePending(op:IOp, args:Array<String>, vars:Map<String, String>, pendingVarName:String) 
+	private function executePending(op:IOp, name:String, args:Array<String>, vars:Map<String, String>, pendingVarName:String) 
 	{
 		if (pendingVarName != null) {
 			PrintTools.error("Failed: '=' sign must be followed by variable value");
@@ -155,7 +174,7 @@ class CliTool
 				if (argInfo.def == null) {
 					if (argInfo.prompt != null){
 						PrintTools.progressInfo(argInfo.prompt);
-						vars.set(argInfo.name, Sys.stdin().readLine());
+						vars.set(argInfo.name, CliStd.readAll());
 					}else{
 						PrintTools.error("Failed: Required argument '"+argInfo.name+"'");
 						exit(1);
@@ -165,7 +184,7 @@ class CliTool
 				}
 			}
 		}
-		op.doOp(vars);
+		op.doOp(name, new ArgsImpl(vars));
 	}
 	
 	
@@ -181,4 +200,36 @@ class CliTool
 typedef CliToolOptions =
 {
 	?checkLastArgForCWD:Bool
+}
+
+class ArgsImpl
+{
+	var map:Map<String, String>;
+	
+	public function new(map:Map<String, String>) 
+	{
+		this.map = map;
+	}
+	
+	public function get(key:String) : String
+	{
+		return map.get(key);
+	}
+	
+	public function string(key:String, ?def:String) : String
+	{
+		var ret = map.get(key);
+		return ret == null ? def : ret;
+		
+	}
+	public function bool(key:String, def:Bool) : Bool
+	{
+		var value = map.get(key);
+		if (def){
+			return value != 'false' && value != '0' && value != 'no';
+		}else{
+			return value == 'true' || value == '1' || value == 'yes';
+		}
+	}
+	
 }

@@ -1,14 +1,14 @@
 package com.imagination.util.app;
-import com.imagination.core.type.Notifier;
-import com.imagination.util.app.AppExit.ExitContinue;
 import com.imagination.util.window.AppWindows;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.xml.Fast;
+import lime.app.Application;
 
 #if openfl
 import openfl.Lib;
 import openfl.display.Stage;
+import com.imagination.core.type.Notifier;
 #end
 
 #if flash
@@ -20,19 +20,26 @@ import js.html.Event;
 
 #end
 
+#if !sys
+import com.imagination.util.app.AppExit.ExitContinue;
+#end
+
 /**
  * ...
  * @author Thomas Byrne
  */
 @:access(com.imagination.util.window.AirAppWindows)
+@:access(lime.ui.Window)
 class App
 {
+	#if openfl
 	@:isVar static public var focused(get, null):Notifier<Bool>;
 	static function get_focused():Notifier<Bool> 
 	{
 		setup();
 		return focused;
 	}
+	#end
 	
 	static private var appId:String;
 	static private var appExe:String;
@@ -57,7 +64,11 @@ class App
 	@:isVar static public var appElement(get, null):js.html.Element;
 	static function get_appElement():js.html.Element 
 	{
-		if (appElement == null) appElement = js.Browser.document.getElementById("openfl-content");
+		#if (lime < 7)
+		if (appElement == null) appElement = Application.current.window.backend.element;
+		#else
+		if (appElement == null) appElement = Application.current.window.element;
+		#end
 		return appElement;
 	}
 	#end
@@ -189,9 +200,15 @@ class App
 			var stage:Stage = Lib.current.stage;
 			if (stage == null || stage.window == null) return;
 			
-			appId = stage.window.application.config.packageName;
-			appFilename = stage.window.application.config.name;
-			version = stage.window.application.config.version;
+			#if (lime < 7)
+			appId = Application.current.config.packageName;
+			appFilename = Application.current.config.name;
+			version = Application.current.config.version;
+			#else
+			appId = Application.current.meta.get("packageName");
+			appFilename = Application.current.meta.get("name");
+			version = Application.current.meta.get("version");
+			#end
 		#end
 		
 	}

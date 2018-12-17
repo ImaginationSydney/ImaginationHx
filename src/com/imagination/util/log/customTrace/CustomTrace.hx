@@ -1,4 +1,5 @@
 package com.imagination.util.log.customTrace;
+import haxe.PosInfos;
 
 /**
  * ...
@@ -6,7 +7,7 @@ package com.imagination.util.log.customTrace;
  */
 class CustomTrace
 {
-	private static var originalTrace;
+	private static var originalTrace : ( Dynamic -> PosInfos  -> Void);
 	private static var installed:Bool;
 	
 	public static function install():Void

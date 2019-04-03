@@ -21,8 +21,8 @@ using StringTools;
 	import flash.filesystem.File as FlFile;
 	import flash.filesystem.FileStream;
 	import flash.filesystem.FileMode;
-	import flash.events.Event;
-	import flash.events.IOErrorEvent;
+	import openfl.events.Event;
+	import openfl.events.IOErrorEvent;
 	
 	class FileTools
 	{

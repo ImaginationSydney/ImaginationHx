@@ -3,6 +3,8 @@ import com.imagination.util.app.App;
 import com.imagination.util.app.Platform;
 import openfl.display.BitmapData;
 
+using StringTools;
+
 /**
  * ...
  * @author Thomas Byrne
@@ -122,13 +124,19 @@ class Files
 		#end
 	}
 	
-	public static function findInstalled(appPath:String) : String
+	static var WINDOWS_APP_PATHS = ["C:\\Users\\${user}\\AppData\\Local\\Programs\\${app}", "C:\\Program Files (x86)\\${app}", "C:\\Program Files\\${app}"];
+	
+	public static function findInstalled(appPath:String, ?onlyExistant:Bool) : String
 	{
-		if(Platform.isWindows()){
-			tempFile.nativePath = ("C:\\Program Files (x86)\\" + appPath);
-			if (!tempFile.exists) {
-				tempFile.nativePath = ("C:\\Program Files\\" + appPath);
+		if (Platform.isWindows()){
+			var username:String = File.userDirectory.name;
+			for (path in WINDOWS_APP_PATHS){
+				path = path.replace("${user}", username);
+				path = path.replace("${app}", appPath);
+				tempFile.nativePath = path;
+				if (tempFile.exists) return tempFile.nativePath;
 			}
+			if (onlyExistant) return null;
 		}else{
 			tempFile.nativePath = ("/Applications/"+appPath);
 		}

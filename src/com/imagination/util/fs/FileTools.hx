@@ -19,7 +19,7 @@ using StringTools;
 #if air
 
 	import flash.filesystem.File as FlFile;
-	import flash.filesystem.FileStream;
+	import com.imagination.util.fs.FileStream;
 	import flash.filesystem.FileMode;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;

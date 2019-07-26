@@ -64,11 +64,11 @@ class App
 	@:isVar static public var appElement(get, null):js.html.Element;
 	static function get_appElement():js.html.Element 
 	{
-		#if (lime < 7)
+		//#if (lime < 7)
 		if (appElement == null) appElement = Application.current.window.backend.element;
-		#else
+		/*#else
 		if (appElement == null) appElement = Application.current.window.element;
-		#end
+		#end*/
 		return appElement;
 	}
 	#end
@@ -200,15 +200,15 @@ class App
 			var stage:Stage = Lib.current.stage;
 			if (stage == null || stage.window == null) return;
 			
-			#if (lime < 7)
+			//#if (lime < 7)
 			appId = Application.current.config.packageName;
 			appFilename = Application.current.config.name;
 			version = Application.current.config.version;
-			#else
+			/*#else
 			appId = Application.current.meta.get("packageName");
 			appFilename = Application.current.meta.get("name");
 			version = Application.current.meta.get("version");
-			#end
+			#end*/
 		#end
 		
 	}

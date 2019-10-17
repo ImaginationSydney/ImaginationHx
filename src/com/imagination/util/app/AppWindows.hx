@@ -37,7 +37,7 @@ class AppWindows
 	public function windowAdded(window:NativeWindow) 
 	{
 		window.addEventListener(Event.CLOSE, onWindowClose);
-		window.addEventListener(Event.CLOSING, onWindowClosing);
+		window.addEventListener('closing', onWindowClosing);
 	}
 	
 	private function onWindowClosing(e:Event):Void 
@@ -50,7 +50,7 @@ class AppWindows
 	{
 		var window:NativeWindow = untyped e.currentTarget;
 		window.removeEventListener(Event.CLOSE, onWindowClose);
-		window.removeEventListener(Event.CLOSING, onWindowClosing);
+		window.removeEventListener('closing', onWindowClosing);
 		if (autoExit && app.openedWindows.length == 0){
 			var exitCode = (windowToError.exists(window) ? windowToError.get(window) : 1);
 			App.exit(exitCode);

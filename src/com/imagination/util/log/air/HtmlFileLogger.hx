@@ -112,7 +112,7 @@ class HtmlFileLogger implements ILogHandler
 	
 	function toDateString(date:Date) : String 
 	{
-		return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+		return date.getFullYear() + "-" + pad(date.getMonth() + 1, 2) + "-" + pad(date.getDate(), 2);
 	}
 	
 	private function pad(num:Int, padBy:Int):String 

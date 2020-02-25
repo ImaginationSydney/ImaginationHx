@@ -1,10 +1,7 @@
 package com.imagination.util.app;
 import com.imagination.core.type.Notifier;
-import com.imagination.util.app.AppExit.ExitContinue;
 import com.imagination.util.window.AppWindows;
-import haxe.macro.Compiler;
-import haxe.macro.Context;
-import haxe.xml.Fast;
+import lime.app.Application;
 
 #if openfl
 import openfl.Lib;
@@ -186,12 +183,31 @@ class App
 		}
 		
 		#elseif openfl
+
 			var stage:Stage = Lib.current.stage;
+
 			if (stage == null || stage.window == null) return;
+
 			
-			appId = stage.window.application.config.packageName;
-			appFilename = stage.window.application.config.name;
-			version = stage.window.application.config.version;
+
+			#if (lime < "7.0.0")
+
+			appId = Application.current.config.packageName;
+
+			appFilename = Application.current.config.name;
+
+			version = Application.current.config.version;
+
+			#else
+
+			appId = Application.current.meta.get("packageName");
+
+			appFilename = Application.current.meta.get("name");
+
+			version = Application.current.meta.get("version");
+
+			#end
+
 		#end
 		
 	}
